@@ -1,8 +1,65 @@
-use super::v1_1::*;
-use crate::RevisionIntegrity;
-use guardian_common::custom_types::*;
+use aqua_verifier_rs_types::models::hash::Hash;
+use aqua_verifier_rs_types::models::page_data::{HashChain, PageData};
+use aqua_verifier_rs_types::models::revision::Revision;
+
 use std::sync::mpsc;
 use std::thread;
+
+use crate::revision_integrity::{RevisionIntegrity, HashChainIntegrity};
+use crate::verification::{only_signature_hash_integrity, only_verification_hash_integrity, only_witness_hash_integrity};
+
+pub fn revision_integrity_ignore_absent(
+    rev: &Revision,
+    prev: Option<&Revision>,
+) -> flagset::FlagSet<RevisionIntegrity> {
+    ignore_absent(revision_integrity(rev, prev))
+}
+
+pub fn revision_integrity(
+    rev: &Revision,
+    prev: Option<&Revision>,
+) -> flagset::FlagSet<RevisionIntegrity> {
+    let mut integrity = only_verification_hash_integrity(rev, prev);
+    integrity |= only_signature_hash_integrity(rev, prev);
+    integrity |= only_witness_hash_integrity(rev, prev);
+
+    integrity
+}
+
+pub fn ignore_absent(
+    mut revision_integrity: flagset::FlagSet<RevisionIntegrity>,
+) -> flagset::FlagSet<RevisionIntegrity> {
+    use RevisionIntegrity::*;
+    revision_integrity -= NoSignature;
+    revision_integrity -= NoWitness;
+    revision_integrity
+}
+
+#[cfg(test)]
+pub fn hash_chain_integrity(
+    hash_chain: &HashChain,
+) -> (
+    flagset::FlagSet<HashChainIntegrity>,
+    Vec<(&Revision, flagset::FlagSet<RevisionIntegrity>)>,
+) {
+    use crate::revision_integrity::HashChainIntegrity;
+
+    let (mut integrity, chain) = only_hash_chain_extract_revision_chain(hash_chain);
+
+    let revision_integrities = chain
+        .iter()
+        .copied()
+        .map(|(rev, prev)| {
+            let rev_integ = revision_integrity(rev, prev);
+            if !ignore_absent(rev_integ).is_empty() {
+                integrity |= HashChainIntegrity::RevisionIntegrityFatal;
+            }
+            (rev, rev_integ)
+        })
+        .collect();
+
+    (integrity, revision_integrities)
+}
 
 pub fn validate(content: String, _rpc: String) {
     let representation_json: PageData = match serde_json::from_str(content.as_str()) {

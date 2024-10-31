@@ -1887,6 +1887,7 @@ dependencies = [
  "libsecp256k1",
  "serde",
  "serde_json",
+ "sha3",
  "tokio",
 ]
 
