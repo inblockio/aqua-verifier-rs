@@ -113,7 +113,7 @@ checksum = "c042108f3ed77fd83760a5fd79b53be043192bb3b9dba91d8c574c0ada7850c8"
 [[package]]
 name = "aqua-verifier-rs-types"
 version = "0.1.0"
-source = "git+https://github.com/dalmasonto/aqua-rs-types?branch=master#572226330198212fa43ba7c7955cf7371bf8be43"
+source = "git+https://github.com/inblockio/aqua-verifier-rs-types?branch=main#88a4bff98a108669dd1feba499a2b5e7d60e4a58"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -127,6 +127,7 @@ dependencies = [
  "rustls",
  "rustls-webpki",
  "serde",
+ "serde-tuple-vec-map",
  "serde_json",
  "serde_with",
  "sha3",
@@ -1515,6 +1516,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f55c3193aca71c12ad7890f1785d2b73e1b9f63a0bbc353c08ef26fe03fc56b5"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-tuple-vec-map"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a04d0ebe0de77d7d445bb729a895dcb0a288854b267ca85f030ce51cdc578c82"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
