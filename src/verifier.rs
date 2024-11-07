@@ -9,10 +9,12 @@ use crate::model::{
 
 pub fn verify_revision(revision: Revision) -> RevisionVerificationResult {
 
+    let mut logs : Vec<String> =  Vec::new();
     let default_result_status: ResultStatus = ResultStatus {
         status: ResultStatusEnum::MISSING,
         successful: false,
-        message: "default".to_string()
+        message: "default".to_string(),
+        logs: logs
     };
 
     let revision_result: RevisionVerificationResult = RevisionVerificationResult {
@@ -86,6 +88,11 @@ pub fn verifyAquaChain(
     return hashChainResult;
 }
 
-pub fn sign_aqua_chain() {}
+pub fn sign_aqua_chain() {
+    println!(" sign aqua file ....");
+}
 
-pub fn witness_aqua_chain() {}
+pub fn witness_aqua_chain() {
+
+    println!(" witness aqua file ....");
+}

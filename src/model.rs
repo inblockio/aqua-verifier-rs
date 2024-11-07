@@ -28,6 +28,7 @@ pub struct ResultStatus {
    pub status: ResultStatusEnum,
    pub successful: bool,
    pub message: String,
+   pub logs : Vec<String>
 }
 
 #[derive(Deserialize, Serialize, Debug)]

@@ -34,25 +34,25 @@ fn generate_hash_from_base64(b64: &str) -> String {
 }
 
 fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
-    if let Some(file_content_hash) = &data.file_hash {
-        if let Some(file_content) = &data.file {
-            let hash_from_b64 = generate_hash_from_base64(file_content);
-            if file_content_hash.clone() == hash_from_b64 {
-                return (true, VerifyFileResult {
-                    file_hash: Some(file_content_hash.clone()),
-                    error_message: None,
-                });
-            } else {
-                return (
-                    false,
-                    VerifyFileResult {
-                        file_hash: None,
-                        error_message: Some("File content hash does not match".to_string()),
-                    },
-                );
-            }
-        }
-    }
+    // if let Some(file_content_hash) = &data.file_hash {
+    //     if let Some(file_content) = &data.file {
+    //         let hash_from_b64 = generate_hash_from_base64(file_content);
+    //         if file_content_hash.clone() == hash_from_b64 {
+    //             return (true, VerifyFileResult {
+    //                 file_hash: Some(file_content_hash.clone()),
+    //                 error_message: None,
+    //             });
+    //         } else {
+    //             return (
+    //                 false,
+    //                 VerifyFileResult {
+    //                     file_hash: None,
+    //                     error_message: Some("File content hash does not match".to_string()),
+    //                 },
+    //             );
+    //         }
+    //     }
+    // }
     (
         false,
         VerifyFileResult {
@@ -77,17 +77,17 @@ fn verify_content_util(data: &RevisionContent) -> (bool, String) {
 }
 
 fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
-    let metadata_hash = calculate_metadata_hash(
-        &data.domain_id,
-        &data.time_stamp,
-        data.previous_verification_hash.as_deref(),
-        data.merge_hash.as_deref(),
-    );
-    if metadata_hash == data.metadata_hash.to_string() {
-        (true, metadata_hash)
-    } else {
+    // let metadata_hash = calculate_metadata_hash(
+    //     &data.domain_id,
+    //     &data.time_stamp,
+    //     data.previous_verification_hash.as_deref(),
+    //     data.merge_hash.as_deref(),
+    // );
+    // if metadata_hash == data.metadata_hash.to_string() {
+    //     (true, metadata_hash)
+    // } else {
         (false, "Metadata hash does not match".to_string())
-    }
+    // }
 }
 
 fn calculate_metadata_hash(
