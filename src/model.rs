@@ -32,11 +32,19 @@ pub struct ResultStatus {
    pub logs : Vec<String>
 }
 
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HashChainWithLog{
    pub chain : HashChain,
     pub logs : Vec<String>
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PageDataWithLog{
+   pub page_data : PageData,
+    pub logs : Vec<String>
+}
+
 
 
 #[derive(Deserialize, Serialize, Debug)]

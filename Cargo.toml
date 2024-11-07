@@ -18,6 +18,10 @@ sha3 = "0.10.8"
 aqua-verifier-rs-types = { git = "https://github.com/inblockio/aqua-verifier-rs-types", branch = "main" }
 ethers = "2.0.14"
 
+chrono = "0.4.38"
+sha3 = "0.10.8"
+futures = "0.3"
+
 
 [dev-dependencies]
 # serde_json.workspace = true
