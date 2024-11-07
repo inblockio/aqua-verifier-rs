@@ -1,4 +1,5 @@
 use aqua_verifier_rs_types::models::page_data::HashChain;
+use aqua_verifier_rs_types::models::page_data::PageData;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
