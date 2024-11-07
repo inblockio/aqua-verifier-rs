@@ -16,7 +16,7 @@ struct VerifyFileResult {
     error_message: Option<String>,
 }
 
-fn get_hash_sum(content: &str) -> String {
+pub fn get_hash_sum(content: &str) -> String {
     if content.is_empty() {
         String::new()
     } else {
@@ -26,14 +26,14 @@ fn get_hash_sum(content: &str) -> String {
     }
 }
 
-fn generate_hash_from_base64(b64: &str) -> String {
+pub fn generate_hash_from_base64(b64: &str) -> String {
     let mut hasher = Sha3_512::new();
     //todo fix me
     // hasher.update(base64::decode(b64).unwrap());
     format!("{:x}", hasher.finalize())
 }
 
-fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
+pub fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
     // if let Some(file_content_hash) = &data.file_hash {
     //     if let Some(file_content) = &data.file {
     //         let hash_from_b64 = generate_hash_from_base64(file_content);
@@ -62,7 +62,7 @@ fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
     )
 }
 
-fn verify_content_util(data: &RevisionContent) -> (bool, String) {
+pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
     let mut content = String::new();
     for slotcontent in data.content.values() {
         content += slotcontent;
@@ -76,7 +76,7 @@ fn verify_content_util(data: &RevisionContent) -> (bool, String) {
     }
 }
 
-fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
+pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     // let metadata_hash = calculate_metadata_hash(
     //     &data.domain_id,
     //     &data.time_stamp,
@@ -90,7 +90,7 @@ fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     // }
 }
 
-fn calculate_metadata_hash(
+pub fn calculate_metadata_hash(
     domain_id:String,
     timestamp:Timestamp,
     previous_verification_hash: Option<Hash>,
@@ -106,9 +106,9 @@ fn calculate_metadata_hash(
     get_hash_sum(&content)
 }
 
-fn verify_signature_util(
-    data: &RevisionSignature,
-    verification_hash: &str,
+pub fn verify_signature_util(
+    data: RevisionSignature,
+    verification_hash: String,
 ) -> (bool, String) {
     if verification_hash.is_empty() {
         return (false, "Verification hash must not be empty".to_string());
@@ -137,11 +137,12 @@ fn verify_signature_util(
     // }
 }
 
-async fn verify_witness_util(
-    witness_data: &RevisionWitness,
+pub  fn verify_witness_util(
+    witness_data: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
-    alchemy_key: &str,
+    alchemy_key: String,
+    do_alchemy_key_look_up: bool,
 ) -> (bool, String) {
     let actual_witness_event_verification_hash =
         get_hash_sum(&(witness_data.domain_snapshot_genesis_hash.clone().to_string() + &witness_data.merkle_root.to_string()));
@@ -170,7 +171,7 @@ async fn verify_witness_util(
     (true, "Look up not performed.".to_string())
 }
 
-fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: String) -> bool {
+pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: String) -> bool {
     if merkle_branch.is_empty() {
         return false;
     }
