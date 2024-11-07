@@ -17,7 +17,7 @@ pub struct RevisionVerificationResult {
 }
 
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub enum ResultStatusEnum {
     MISSING,
     AVAILABLE
