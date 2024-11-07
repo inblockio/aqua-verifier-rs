@@ -73,7 +73,7 @@ pub fn verify_witness(
     return default_result_status;
 }
 
-pub fn verifyAquaChain(
+pub fn verify_aqua_chain(
     aqua_chain: HashChain,
     alchemy_key: String,
     do_alchemy_key_look_up: bool,

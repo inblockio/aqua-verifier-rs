@@ -12,3 +12,4 @@ pub mod revision_integrity;
 pub mod sa;
 pub mod util;
 pub mod model;
+pub mod verifier;
