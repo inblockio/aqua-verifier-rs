@@ -1,3 +1,4 @@
+use aqua_verifier_rs_types::models::page_data::HashChain;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -30,6 +31,13 @@ pub struct ResultStatus {
    pub message: String,
    pub logs : Vec<String>
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct HashChainWithLog{
+   pub chain : HashChain,
+    pub logs : Vec<String>
+}
+
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct VerifyFileResult {

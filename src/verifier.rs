@@ -4,7 +4,7 @@ use aqua_verifier_rs_types::models::{
 };
 
 use crate::model::{
-    ResultStatus, ResultStatusEnum, RevisionAquaChainResult, RevisionVerificationResult,
+    ResultStatus, ResultStatusEnum, RevisionAquaChainResult, RevisionVerificationResult, HashChainWithLog,
 };
 
 use crate::util::{verify_signature_util, verify_witness_util};
@@ -100,11 +100,25 @@ pub fn verify_aqua_chain(
     return hashChainResult;
 }
 
-pub fn sign_aqua_chain() {
+pub fn sign_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
     println!(" sign aqua file ....");
+    let mut logs : Vec<String> = Vec::new();
+    let rs = HashChainWithLog{
+        chain: aqua_chain,
+        logs: logs
+    };
+
+    Ok(rs)
 }
 
-pub fn witness_aqua_chain() {
+pub fn witness_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
 
     println!(" witness aqua file ....");
+    let mut logs : Vec<String> = Vec::new();
+    let rs = HashChainWithLog{
+        chain: aqua_chain,
+        logs: logs
+    };
+
+    Ok(rs)
 }
