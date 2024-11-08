@@ -7,8 +7,12 @@ use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use base64::decode;
+use ethers::utils::hash_message;
+use libsecp256k1::recover;
 use sha3::{Digest, Sha3_512};
+use std::fmt::format;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::{fs, str};
 
 use crate::model::{ResultStatusEnum, RevisionVerificationResult};
@@ -119,7 +123,7 @@ pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     if metadata_hash == data.metadata_hash.to_string() {
         (true, metadata_hash)
     } else {
-    (false, "Metadata hash does not match".to_string())
+        (false, "Metadata hash does not match".to_string())
     }
 }
 
@@ -149,22 +153,40 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
         verification_hash
     );
 
-    (true, "todo".to_string())
-    //todo
-    // match ethers::utils::recover_address(&ethers::utils::keccak256(padded_message.as_bytes()), &data.signature) {
-    //     Ok(recovered_address) => {
-    //         let signature_ok = recovered_address.to_lowercase() == data.wallet_address.to_lowercase();
-    //         (
-    //             signature_ok,
-    //             if signature_ok {
-    //                 "Signature is Valid".to_string()
-    //             } else {
-    //                 "Signature is invalid".to_string()
-    //             },
-    //         )
-    //     }
-    //     Err(e) => (false, format!("An error occurred retrieving signature: {}", e)),
-    // }
+    let signature_string = format!("{:?}", data.signature);
+    println!("The signature is {}", signature_string);
+
+    let mut status = String::new();
+    let mut signature_ok = false;
+    match (
+        hash_message(padded_message),
+        ethers::types::Signature::from_str(signature_string.as_str()),
+    ) {
+        (hashed_msg, Ok(sig)) => {
+            match ethers::core::types::Signature::recover(&sig, hashed_msg) {
+                Ok(recovered_address) => {
+                    // Convert both addresses to lowercase for comparison
+                    signature_ok = recovered_address.to_string().to_lowercase()
+                        == data.wallet_address.to_string().to_lowercase();
+                    status = if signature_ok {
+                        "Signature is Valid".to_string()
+                    } else {
+                        "Signature is invalid".to_string()
+                    };
+                }
+                Err(e) => {
+                    status = format!("An error occurred retrieving signature: {}", e);
+                }
+            }
+        }
+        (_, Err(e)) => {
+            // Handle invalid signature format
+            status = format!("Invalid signature format: {}", e);
+        }
+    }
+
+
+    (signature_ok, status)
 }
 
 pub fn verify_witness_util(
@@ -267,23 +289,20 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
     true
 }
 
-
 //test function
 pub fn read_aqua_data(path: &PathBuf) -> Result<PageData, String> {
     let data = fs::read_to_string(path);
     match data {
-        Ok(data) =>{
-            let res= serde_json::from_str::<PageData>(&data);
+        Ok(data) => {
+            let res = serde_json::from_str::<PageData>(&data);
             match res {
-                Ok(res_data)=>{
-                    Ok(res_data)
-                }
-                Err(err_data)=>{
+                Ok(res_data) => Ok(res_data),
+                Err(err_data) => {
                     return Err(format!("Error, parsing json {}", err_data));
                 }
             }
         }
-        Err(e)=>{
+        Err(e) => {
             return Err(format!("Error , {}", e));
         }
     }
