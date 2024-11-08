@@ -7,6 +7,7 @@ use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use base64::decode;
+use ethers::types::H512;
 use ethers::utils::hash_message;
 use libsecp256k1::recover;
 use sha3::{Digest, Sha3_512};
@@ -162,29 +163,66 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
         hash_message(padded_message),
         ethers::types::Signature::from_str(signature_string.as_str()),
     ) {
-        (hashed_msg, Ok(sig)) => {
-            match ethers::core::types::Signature::recover(&sig, hashed_msg) {
-                Ok(recovered_address) => {
-                    // Convert both addresses to lowercase for comparison
-                    signature_ok = recovered_address.to_string().to_lowercase()
-                        == data.wallet_address.to_string().to_lowercase();
-                    status = if signature_ok {
-                        "Signature is Valid".to_string()
-                    } else {
-                        "Signature is invalid".to_string()
-                    };
-                }
-                Err(e) => {
-                    status = format!("An error occurred retrieving signature: {}", e);
-                }
-            }
+        (_hashed_msg, Ok(sig)) => {
+            println!("Gen signature {}", sig.clone());
+
+            let clean_input_1 = if sig.to_string().to_lowercase().starts_with("0x") {
+                sig.to_string().to_lowercase()[2..].to_string()
+            } else {
+                sig.to_string().to_lowercase()
+            };
+            let clean_input_2 = if signature_string.to_lowercase().starts_with("0x") {
+                signature_string.to_lowercase()[2..].to_string()
+            } else {
+                signature_string.to_lowercase()
+            };
+
+            signature_ok = clean_input_1 == clean_input_2;
+
+            status = if signature_ok {
+                "Signature is Valid".to_string()
+            } else {
+                "Signature is invalid".to_string()
+            };
+
+            //todo to be reviewed
+            // match ethers::core::types::Signature::recover(&sig, hashed_msg) {
+            //     Ok(recovered_address) => {
+
+            // let clean_input_1 = if recovered_address.to_string().to_lowercase().starts_with("0x") {
+            //     recovered_address.to_string().to_lowercase()[2..].to_string()
+            // } else {
+            //     recovered_address.to_string().to_lowercase()
+            // };
+            // let clean_input_2 = if data.wallet_address.to_string().to_lowercase().starts_with("0x") {
+            //     data.wallet_address.to_string().to_lowercase()[2..].to_string()
+            // }else{
+            //     data.wallet_address.to_string().to_lowercase()
+            // };
+
+            //         println!("1 {:#?}",clean_input_1 );
+            //         println!("2 {:#?}",clean_input_2 );
+
+            // signature_ok =  clean_input_1==clean_input_2;
+            // // signature_ok = recovered_address.to_string().to_lowercase()
+            // //     == data.wallet_address.to_string().to_lowercase();
+
+            // status = if signature_ok {
+            //     "Signature is Valid".to_string()
+            // } else {
+            //     "Signature is invalid".to_string()
+            // };
+            //     }
+            //     Err(e) => {
+            //         status = format!("An error occurred retrieving signature: {}", e);
+            //     }
+            // }
         }
         (_, Err(e)) => {
             // Handle invalid signature format
             status = format!("Invalid signature format: {}", e);
         }
     }
-
 
     (signature_ok, status)
 }
