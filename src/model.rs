@@ -8,7 +8,7 @@ pub struct RevisionAquaChainResult {
     pub revisionResults : Vec<RevisionVerificationResult>
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RevisionVerificationResult {
     pub successful: bool,
     pub file_verification: ResultStatus,

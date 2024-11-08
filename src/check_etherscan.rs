@@ -55,7 +55,7 @@ impl TransactionVerifier for EtherTransactionVerifier {
             Err(_) => return Err("Failed to create provider".to_string()),
         };
 
-        let tx_hash = match tx_hash.parse() {
+        let tx_hash: TxHash = match tx_hash.parse() {
             Ok(hash) => hash,
             Err(_) => return Err("Invalid transaction hash format".to_string()),
         };

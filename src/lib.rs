@@ -7,10 +7,12 @@
 //! It is part of the [aqua project](https://aqua-protocol.org/).
 //!
 
-pub mod verification;
+// pub mod verification;
+pub mod verification_;
 pub mod revision_integrity;
 pub mod sa;
 pub mod util;
 pub mod model;
 pub mod verifier;
 pub mod  check_etherscan;
+pub mod  aqua_verifier_struct_impl;

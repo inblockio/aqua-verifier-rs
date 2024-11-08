@@ -1,19 +1,19 @@
 use aqua_verifier_rs_types::models::base64;
 use aqua_verifier_rs_types::models::content::RevisionContent;
+use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
-use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
-use aqua_verifier_rs_types::models::witness::{RevisionWitness, MerkleNode};
+use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use sha3::{Digest, Sha3_512};
 use std::str;
 
-
+use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 
 #[derive(Debug)]
-struct VerifyFileResult {
-    file_hash: Option<String>,
-    error_message: Option<String>,
+pub struct VerifyFileResult {
+    pub file_hash: Option<String>,
+    pub error_message: Option<String>,
 }
 
 pub fn get_hash_sum(content: &str) -> String {
@@ -64,12 +64,11 @@ pub fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
 
 pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
     let mut content = String::new();
-    for slotcontent in data.content.values() {
-        content += slotcontent;
-    }
+    content += format!("{:#?}", data.content.file_hash).as_str();
+
     let content_hash = get_hash_sum(&content);
-    let  data_content_hash_str=  format!("{:#?}", data.content_hash);
-    if content_hash ==  data_content_hash_str{
+    let data_content_hash_str = format!("{:#?}", data.content_hash);
+    if content_hash == data_content_hash_str {
         (true, content_hash)
     } else {
         (false, "Content hash does not match".to_string())
@@ -86,17 +85,17 @@ pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     // if metadata_hash == data.metadata_hash.to_string() {
     //     (true, metadata_hash)
     // } else {
-        (false, "Metadata hash does not match".to_string())
+    (false, "Metadata hash does not match".to_string())
     // }
 }
 
 pub fn calculate_metadata_hash(
-    domain_id:String,
-    timestamp:Timestamp,
+    domain_id: String,
+    timestamp: Timestamp,
     previous_verification_hash: Option<Hash>,
     merge_hash: Option<Hash>,
 ) -> String {
-    let mut content : String= domain_id + &timestamp.to_string();
+    let mut content: String = domain_id + &timestamp.to_string();
     if let Some(prev_hash) = previous_verification_hash {
         content += &prev_hash.to_string();
     }
@@ -106,10 +105,7 @@ pub fn calculate_metadata_hash(
     get_hash_sum(&content)
 }
 
-pub fn verify_signature_util(
-    data: RevisionSignature,
-    verification_hash: String,
-) -> (bool, String) {
+pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -> (bool, String) {
     if verification_hash.is_empty() {
         return (false, "Verification hash must not be empty".to_string());
     }
@@ -137,32 +133,43 @@ pub fn verify_signature_util(
     // }
 }
 
-pub  fn verify_witness_util(
+pub fn verify_witness_util(
     witness_data: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
     alchemy_key: String,
     do_alchemy_key_look_up: bool,
 ) -> (bool, String) {
-    let actual_witness_event_verification_hash =
-        get_hash_sum(&(witness_data.domain_snapshot_genesis_hash.clone().to_string() + &witness_data.merkle_root.to_string()));
+    let actual_witness_event_verification_hash = get_hash_sum(
+        &(witness_data
+            .domain_snapshot_genesis_hash
+            .clone()
+            .to_string()
+            + &witness_data.merkle_root.to_string()),
+    );
 
-    if actual_witness_event_verification_hash != witness_data.witness_event_verification_hash.to_string() {
+    if actual_witness_event_verification_hash
+        != witness_data.witness_event_verification_hash.to_string()
+    {
         return (false, "Verification hashes do not match".to_string());
     }
 
     if do_verify_merkle_proof {
         if verification_hash == witness_data.domain_snapshot_genesis_hash.to_string() {
-            return (true, "Verification hash is the same as domain snapshot genesis hash".to_string());
+            return (
+                true,
+                "Verification hash is the same as domain snapshot genesis hash".to_string(),
+            );
         } else {
-            let merkle_proof_is_ok = verify_merkle_integrity(&witness_data.structured_merkle_proof, verification_hash);
-            return  (
+            let merkle_proof_is_ok =
+                verify_merkle_integrity(&witness_data.structured_merkle_proof, verification_hash);
+            return (
                 merkle_proof_is_ok,
                 if merkle_proof_is_ok {
                     "Merkle proof is OK".to_string()
                 } else {
                     "Error verifying merkle proof".to_string()
-                }
+                },
             );
         }
     }
@@ -204,6 +211,25 @@ pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: 
 
     //     prev_successor = Some(node.successor.clone());
     // }
+
+    true
+}
+
+
+pub fn all_successful_verifications(revision_result: &RevisionVerificationResult) -> bool {
+    let verifications = [
+        &revision_result.file_verification,
+        &revision_result.content_verification,
+        &revision_result.witness_verification,
+        &revision_result.signature_verification,
+        &revision_result.metadata_verification,
+    ];
+
+    for verification in verifications {
+        if matches!(verification.status, ResultStatusEnum::AVAILABLE) && !verification.successful {
+            return false;
+        }
+    }
 
     true
 }
