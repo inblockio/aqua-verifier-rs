@@ -110,17 +110,17 @@ pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
 }
 
 pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
-    // let metadata_hash = calculate_metadata_hash(
-    //     &data.domain_id,
-    //     &data.time_stamp,
-    //     data.previous_verification_hash.as_deref(),
-    //     data.merge_hash.as_deref(),
-    // );
-    // if metadata_hash == data.metadata_hash.to_string() {
-    //     (true, metadata_hash)
-    // } else {
+    let metadata_hash = calculate_metadata_hash(
+        data.domain_id.clone(),
+        data.time_stamp.clone(),
+        data.previous_verification_hash,
+        data.merge_hash,
+    );
+    if metadata_hash == data.metadata_hash.to_string() {
+        (true, metadata_hash)
+    } else {
     (false, "Metadata hash does not match".to_string())
-    // }
+    }
 }
 
 pub fn calculate_metadata_hash(
