@@ -4322,6 +4322,7 @@ name = "verifier"
 version = "0.1.0"
 dependencies = [
  "aqua-verifier-rs-types",
+ "async-trait",
  "chrono",
  "ethers",
  "flagset",

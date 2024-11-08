@@ -53,3 +53,12 @@ pub struct VerifyFileResult {
     pub error_message: Option<String>,
     pub file_hash: Option<String>,
 }
+
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CheckEtherScanResult {
+    pub verification_hash_matches: bool,
+    pub message: String,
+    pub successful: bool,
+}
