@@ -19,6 +19,8 @@ aqua-verifier-rs-types = { git = "https://github.com/inblockio/aqua-verifier-rs-
 ethers = "2.0.14"
 chrono = "0.4.38"
 async-trait = "0.1.83"
+base64 = "0.22.1"
+hex = "0.4.3"
 
 
 [dev-dependencies]

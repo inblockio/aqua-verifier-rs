@@ -134,7 +134,7 @@ checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 [[package]]
 name = "aqua-verifier-rs-types"
 version = "0.1.0"
-source = "git+https://github.com/inblockio/aqua-verifier-rs-types?branch=master#215aa9d39d4b6d0fe114c5f5ab9ffb4cb354b778"
+source = "git+https://github.com/inblockio/aqua-verifier-rs-types?branch=master#c2381386d42b7b9386b02706a6418546dbc93884"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -422,9 +422,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.36"
+version = "1.1.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baee610e9452a8f6f0a1b6194ec09ff9e2d85dea54432acdae41aa0761c95d70"
+checksum = "40545c26d092346d8a8dab71ee48e7685a7a9cba76e634790c215b41a4a7b4cf"
 dependencies = [
  "jobserver",
  "libc",
@@ -4323,10 +4323,12 @@ version = "0.1.0"
 dependencies = [
  "aqua-verifier-rs-types",
  "async-trait",
+ "base64 0.22.1",
  "chrono",
  "ethers",
  "flagset",
  "futures",
+ "hex",
  "jsonschema",
  "libsecp256k1",
  "serde",

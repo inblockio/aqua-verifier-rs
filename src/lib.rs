@@ -16,3 +16,4 @@ pub mod model;
 pub mod verifier;
 pub mod  check_etherscan;
 pub mod  aqua_verifier_struct_impl;
+pub mod tests;

@@ -5,7 +5,7 @@ use crate::model::{
     RevisionVerificationResult,
 };
 use aqua_verifier_rs_types::models::base64::Base64;
-use aqua_verifier_rs_types::models::content::RevisionContentContent;
+use aqua_verifier_rs_types::models::content::{RevisionContentContent, RevisionContentSignature};
 use aqua_verifier_rs_types::models::content::{FileContent, RevisionContent};
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
@@ -40,7 +40,7 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
         metadata_verification: default_result_status.clone(),
     };
 
-    let (file_is_correct, file_out) = verify_file_util(&revision.content);
+    let (file_is_correct, file_out) = verify_file_util(revision.content.clone());
     revision_result.file_verification.status = ResultStatusEnum::AVAILABLE;
     revision_result.file_verification.successful = file_is_correct;
     revision_result.file_verification.message = match file_out.error_message{
@@ -119,12 +119,12 @@ pub fn verify_signature(
         logs: logs,
     };
 
-    let (signatureOk, signatureMessage) =
+    let (signature_ok, signature_message) =
         verify_signature_util(signature, previous_verification_hash);
 
     default_result_status.status = ResultStatusEnum::AVAILABLE;
-    default_result_status.successful = signatureOk;
-    default_result_status.message = signatureMessage;
+    default_result_status.successful = signature_ok;
+    default_result_status.message = signature_message;
 
     return default_result_status;
 }
@@ -144,7 +144,7 @@ pub fn verify_witness(
         logs: logs,
     };
 
-    let (witnessOk, witnessMessage) = verify_witness_util(
+    let (witness_ok, witness_message) = verify_witness_util(
         witness,
         verification_hash,
         do_verify_merkle_proof,
@@ -153,8 +153,8 @@ pub fn verify_witness(
     );
 
     default_result_status.status = ResultStatusEnum::AVAILABLE;
-    default_result_status.successful = witnessOk;
-    default_result_status.message = witnessMessage;
+    default_result_status.successful = witness_ok;
+    default_result_status.message = witness_message;
 
     return default_result_status;
 }
@@ -185,7 +185,7 @@ pub fn verify_aqua_chain(
 }
  
 // TODO: Fix
-pub fn sign_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
+pub fn sign_aqua_chain(aqua_chain: HashChain, revision_content : RevisionContentSignature) -> Result<HashChainWithLog, Vec<String>> {
     println!(" sign aqua file ....");
     let mut logs: Vec<String> = Vec::new();
     let rs = HashChainWithLog {

@@ -1,12 +1,15 @@
-use aqua_verifier_rs_types::models::base64;
+use aqua_verifier_rs_types::models::base64::Base64;
 use aqua_verifier_rs_types::models::content::RevisionContent;
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
+use aqua_verifier_rs_types::models::page_data::PageData;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
+use base64::decode;
 use sha3::{Digest, Sha3_512};
-use std::str;
+use std::path::PathBuf;
+use std::{fs, str};
 
 use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 
@@ -26,38 +29,69 @@ pub fn get_hash_sum(content: &str) -> String {
     }
 }
 
-pub fn generate_hash_from_base64(b64: &str) -> String {
+// pub fn generate_hash_from_base64(b64: Base64) -> String {
+// let mut hasher = Sha3_512::new();
+// hasher.update(base64::decode(b64).unwrap());
+// format!("{:x}", hasher.finalize())
+// }
+
+fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
+    // Decode the Base64 string
+    let decoded_bytes_result = base64::decode(b64); //.expect("Failed to decode Base64 string");
+
+    if decoded_bytes_result.is_err() {
+        println!("unable t decode bytes.");
+        return None;
+    }
+    let decoded_bytes = decoded_bytes_result.unwrap();
+
+    // Create a Sha3_512 hasher
     let mut hasher = Sha3_512::new();
-    //todo fix me
-    // hasher.update(base64::decode(b64).unwrap());
-    format!("{:x}", hasher.finalize())
+
+    // Write input data
+    hasher.update(&decoded_bytes);
+
+    // Read hash digest and consume hasher
+    let result = hasher.finalize();
+
+    // Return the hash as a vector of bytes
+    Some(result.to_vec())
 }
 
-pub fn verify_file_util(data: &RevisionContent) -> (bool, VerifyFileResult) {
-    // if let Some(file_content_hash) = &data.file_hash {
-    //     if let Some(file_content) = &data.file {
-    //         let hash_from_b64 = generate_hash_from_base64(file_content);
-    //         if file_content_hash.clone() == hash_from_b64 {
-    //             return (true, VerifyFileResult {
-    //                 file_hash: Some(file_content_hash.clone()),
-    //                 error_message: None,
-    //             });
-    //         } else {
-    //             return (
-    //                 false,
-    //                 VerifyFileResult {
-    //                     file_hash: None,
-    //                     error_message: Some("File content hash does not match".to_string()),
-    //                 },
-    //             );
-    //         }
-    //     }
-    // }
+pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
+    let file_content_hash = data.content.file_hash;
+    let file_content = data.file.unwrap().data;
+    let hash_fromb64 = generate_hash_from_base64(file_content.to_string().as_str());
+
+    if hash_fromb64.is_none() {
+        return (
+            false,
+            VerifyFileResult {
+                file_hash: None,
+                error_message: Some("unable to decode bytes ".to_string()),
+            },
+        );
+    }
+
+    let hash_gen = hex::encode(hash_fromb64.unwrap());
+
+    println!("Hash gen {}", hash_gen);
+    println!("file Hash  {}", file_content_hash.to_string());
+    if file_content_hash.to_string() != hash_gen {
+        return (
+            false,
+            VerifyFileResult {
+                file_hash: None,
+                error_message: Some("File content hash does not match ".to_string()),
+            },
+        );
+    }
+
     (
-        false,
+        true,
         VerifyFileResult {
-            file_hash: None,
-            error_message: Some("Revision contains a file, but no file content hash".to_string()),
+            file_hash: Some(file_content_hash.to_string()),
+            error_message: None,
         },
     )
 }
@@ -215,7 +249,6 @@ pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: 
     true
 }
 
-
 pub fn all_successful_verifications(revision_result: &RevisionVerificationResult) -> bool {
     let verifications = [
         &revision_result.file_verification,
@@ -232,4 +265,26 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
     }
 
     true
+}
+
+
+//test function
+pub fn read_aqua_data(path: &PathBuf) -> Result<PageData, String> {
+    let data = fs::read_to_string(path);
+    match data {
+        Ok(data) =>{
+            let res= serde_json::from_str::<PageData>(&data);
+            match res {
+                Ok(res_data)=>{
+                    Ok(res_data)
+                }
+                Err(err_data)=>{
+                    return Err(format!("Error, parsing json {}", err_data));
+                }
+            }
+        }
+        Err(e)=>{
+            return Err(format!("Error , {}", e));
+        }
+    }
 }
