@@ -183,7 +183,7 @@ pub fn verify_aqua_chain(
 
     return hash_chain_result;
 }
-
+ 
 // TODO: Fix
 pub fn sign_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
     println!(" sign aqua file ....");
