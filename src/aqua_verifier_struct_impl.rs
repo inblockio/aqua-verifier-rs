@@ -130,17 +130,14 @@ impl AquaVerifier {
         body_bytes: Vec<u8>,
         file_name: String,
         domain_id: String,
-    ) -> Result<PageDataWithLog, Box<dyn Error>> {
+    ) -> Result<PageDataWithLog, Vec<String>> {
         if self.options.version != 1.2 {
-            return Err(UNSUPPORTED_VERSION.into());
+            let mut tmp = Vec::new();
+tmp.push(UNSUPPORTED_VERSION.to_string());
+            return Err(tmp);
         }
+        return generate_aqua_chain(body_bytes,file_name,domain_id);
 
-        let res = generate_aqua_chain(body_bytes,file_name,domain_id);
-
-        if res.is_err(){
-            return  Err(format!("{:#?}",res.err()).into());
-        }
-        return Ok(res.unwrap());
     }
 
     pub fn sign_aqua_chain(&self) -> Result<(), Box<dyn Error>> {
