@@ -50,35 +50,62 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
         None => String::from("No message")
     };
 
+    file_out.logs.iter().map(|item| format!("\t {}", item)).for_each(|log| logs.push(log));
+
+
     if file_is_correct{
         logs.push("Success : successfully  verified file".to_string());  
     }else {
         logs.push(format!("Error :  failed to verify file {}", file_out.error_message.unwrap_or(String::from("Unable to parse error")) ));
     }
-    logs.extend(file_out.logs);
+    
 
     // Verify Content
+    logs.push("Info : Verifying  the content".to_string());
     let (verify_content_is_okay, result_message) = verify_content_util(&revision.content);
     revision_result.content_verification.status = ResultStatusEnum::AVAILABLE;
     revision_result.content_verification.successful = verify_content_is_okay;
-    revision_result.content_verification.message = result_message;
+    revision_result.content_verification.message = result_message.clone();
+
+    if verify_content_is_okay{
+        logs.push("Success : successfully  verified the content".to_string());  
+    }else {
+        logs.push(format!("Error :  failed to verify the content {}", result_message));
+    }
 
     // Verify Metadata 
+    logs.push("Info : Verifying  the metadata".to_string());
     let (metadata_ok, metadata_hash_message) = verify_metadata_util(&revision.metadata);
     revision_result.metadata_verification.status = ResultStatusEnum::AVAILABLE;
     revision_result.metadata_verification.successful = metadata_ok;
-    revision_result.metadata_verification.message = metadata_hash_message;
+    revision_result.metadata_verification.message = metadata_hash_message.clone();
+
+    if metadata_ok{
+        logs.push("Success : successfully  verified the metadata".to_string());  
+    }else {
+        logs.push(format!("Error :  failed to verify the metadata {}", metadata_hash_message));
+    }
+
 
     // Verify Signature
     if (revision.signature).is_some() {
+        logs.push("Info : Verifying  the signature".to_string());
+
         let (signature_ok, signature_message) = verify_signature_util(revision.signature.unwrap(), revision.metadata.previous_verification_hash.unwrap());
         revision_result.signature_verification.status = ResultStatusEnum::AVAILABLE;
         revision_result.signature_verification.successful = signature_ok;
-        revision_result.signature_verification.message = signature_message;
+        revision_result.signature_verification.message = signature_message.clone();
+
+        if signature_ok{
+            logs.push("Success : successfully  verified a signature".to_string());  
+        }else {
+            logs.push(format!("Error :  failed to verify the signature {}", signature_message));
+        }
     }
 
     // Verify Witness (asynchronous)
     if revision.witness.is_some() {
+        logs.push("Info : Verifying  a witness".to_string());
             // TODO! Fix me
             let (success, message) = verify_witness_util(
                 revision.witness.clone().unwrap(),
@@ -90,7 +117,13 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
             );
             revision_result.witness_verification.status = ResultStatusEnum::AVAILABLE;
             revision_result.witness_verification.successful = success;
-            revision_result.witness_verification.message = message // message if needed
+            revision_result.witness_verification.message = message.clone() ;
+
+            if success{
+                logs.push("Success : successfully  verified a witness".to_string());  
+            }else {
+                logs.push(format!("Error :  failed to verify a witness {}", message));
+            }
     }
 
     
@@ -291,7 +324,6 @@ pub fn generate_aqua_chain(
         }],
     };
 
-    let mut logs: Vec<String> = Vec::new();
     let rs = PageDataWithLog {
         page_data: pagedata_current,
         logs: logs,
