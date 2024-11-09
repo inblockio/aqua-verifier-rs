@@ -22,6 +22,7 @@ use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 pub struct VerifyFileResult {
     pub file_hash: Option<String>,
     pub error_message: Option<String>,
+    pub logs : Vec<String>
 }
 
 pub fn get_hash_sum(content: &str) -> String {
@@ -64,39 +65,46 @@ fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
 }
 
 pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
+    let mut logs : Vec<String>= Vec::new();
+
     let file_content_hash = data.content.file_hash;
     let file_content = data.file.unwrap().data;
     let hash_fromb64 = generate_hash_from_base64(file_content.to_string().as_str());
 
     if hash_fromb64.is_none() {
+        logs.push("Error : unable to decode bytes in  verifying revision content ".to_string());
         return (
             false,
             VerifyFileResult {
                 file_hash: None,
                 error_message: Some("unable to decode bytes ".to_string()),
+                logs:logs
             },
         );
     }
 
     let hash_gen = hex::encode(hash_fromb64.unwrap());
 
-    println!("Hash gen {}", hash_gen);
-    println!("file Hash  {}", file_content_hash.to_string());
+    logs.push(format!("Info : Hash generated {}", hash_gen));
+    logs.push(format!("Info : file Hash in chain  {}", file_content_hash.to_string()));
     if file_content_hash.to_string() != hash_gen {
+        logs.push("Error :  File content hash does not match the genrated hash".to_string());
         return (
             false,
             VerifyFileResult {
                 file_hash: None,
                 error_message: Some("File content hash does not match ".to_string()),
+                logs:logs
             },
         );
     }
-
+    logs.push("Sucess  :  File content hash does matches the genrated hash".to_string());
     (
         true,
         VerifyFileResult {
             file_hash: Some(file_content_hash.to_string()),
             error_message: None,
+            logs:logs
         },
     )
 }

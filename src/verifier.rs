@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::format;
 
 use crate::model::{
     HashChainWithLog, PageDataWithLog, ResultStatus, ResultStatusEnum, RevisionAquaChainResult,
@@ -28,7 +29,7 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
         status: ResultStatusEnum::MISSING,
         successful: false,
         message: "default".to_string(),
-        logs: logs,
+        logs: logs.clone(),
     };
 
     let mut revision_result: RevisionVerificationResult = RevisionVerificationResult {
@@ -40,13 +41,21 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
         metadata_verification: default_result_status.clone(),
     };
 
+    logs.push("Info : Verifying  the file".to_string());
     let (file_is_correct, file_out) = verify_file_util(revision.content.clone());
     revision_result.file_verification.status = ResultStatusEnum::AVAILABLE;
     revision_result.file_verification.successful = file_is_correct;
-    revision_result.file_verification.message = match file_out.error_message{
+    revision_result.file_verification.message = match file_out.error_message.clone(){
         Some(data) => data,
         None => String::from("No message")
     };
+
+    if file_is_correct{
+        logs.push("Success : successfully  verified file".to_string());  
+    }else {
+        logs.push(format!("Error :  failed to verify file {}", file_out.error_message.unwrap_or(String::from("Unable to parse error")) ));
+    }
+    logs.extend(file_out.logs);
 
     // Verify Content
     let (verify_content_is_okay, result_message) = verify_content_util(&revision.content);
@@ -84,21 +93,6 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
             revision_result.witness_verification.message = message // message if needed
     }
 
-    // Check the overall status
-    // let all_successful = true;
-    // for (let verification of Object.values(revision_result)) {
-    //     if (verification.status == ResultStatusEnum::AVAILABLE && !verification.successful) {
-    //         all_successful = false;
-    //         break;
-    //     }
-    // }
-
-    // for (let verification revision_result) {
-    //     if (verification.status == ResultStatusEnum::AVAILABLE && !verification.successful) {
-    //         all_successful = false;
-    //         break;
-    //     }
-    // }
     
     // Update the overall successful status
     revision_result.successful = all_successful_verifications(&revision_result);
