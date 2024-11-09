@@ -15,11 +15,11 @@ const UNSUPPORTED_VERSION: &str = "UNSUPPORTED VERSION";
 
 #[derive(Debug)]
 pub struct VerificationOptions {
-    version: f32,
-    strict: bool,
-    allow_null: bool,
-    alchemy_key: String,
-    do_alchemy_key_lookup: bool,
+   pub version: f32,
+   pub strict: bool,
+   pub allow_null: bool,
+   pub alchemy_key: String,
+   pub do_alchemy_key_lookup: bool,
 }
 
 impl Default for VerificationOptions {
