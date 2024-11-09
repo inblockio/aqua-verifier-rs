@@ -1,11 +1,13 @@
-use std::error::Error;
 use aqua_verifier_rs_types::models::hash::Hash;
+use std::error::Error;
 
 use aqua_verifier_rs_types::models::{
     page_data::HashChain, revision::Revision, signature::RevisionSignature,
     witness::RevisionWitness,
 };
 
+use crate::model::PageDataWithLog;
+use crate::verifier::generate_aqua_chain;
 use crate::{
     model::{ResultStatus, RevisionAquaChainResult, RevisionVerificationResult},
     verifier::{verify_aqua_chain, verify_revision, verify_signature, verify_witness},
@@ -15,11 +17,11 @@ const UNSUPPORTED_VERSION: &str = "UNSUPPORTED VERSION";
 
 #[derive(Debug)]
 pub struct VerificationOptions {
-   pub version: f32,
-   pub strict: bool,
-   pub allow_null: bool,
-   pub alchemy_key: String,
-   pub do_alchemy_key_lookup: bool,
+    pub version: f32,
+    pub strict: bool,
+    pub allow_null: bool,
+    pub alchemy_key: String,
+    pub do_alchemy_key_lookup: bool,
 }
 
 impl Default for VerificationOptions {
@@ -74,10 +76,7 @@ impl AquaVerifier {
     ) -> Result<ResultStatus, Box<dyn Error>> {
         if self.options.version == 1.2 {
             // Call the actual signature verification function (needs to be defined)
-            return Ok(verify_signature(
-                signature.clone(),
-                previous_hash,
-            ));
+            return Ok(verify_signature(signature.clone(), previous_hash));
         }
         Err(UNSUPPORTED_VERSION.into())
     }
@@ -126,8 +125,22 @@ impl AquaVerifier {
         Err("Unimplemented error .... ".into())
     }
 
-    pub fn generate_aqua_chain(&self) -> Result<(), Box<dyn Error>> {
-        Err("Unimplemented error .... ".into())
+    pub fn generate_aqua_chain(
+        &self,
+        body_bytes: Vec<u8>,
+        file_name: String,
+        domain_id: String,
+    ) -> Result<PageDataWithLog, Box<dyn Error>> {
+        if self.options.version != 1.2 {
+            return Err(UNSUPPORTED_VERSION.into());
+        }
+
+        let res = generate_aqua_chain(body_bytes,file_name,domain_id);
+
+        if res.is_err(){
+            return  Err(format!("{:#?}",res.err()).into());
+        }
+        return Ok(res.unwrap());
     }
 
     pub fn sign_aqua_chain(&self) -> Result<(), Box<dyn Error>> {
