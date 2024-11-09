@@ -35,7 +35,7 @@ impl Default for VerificationOptions {
 }
 
 #[derive(Debug)]
-struct AquaVerifier {
+pub struct AquaVerifier {
     options: VerificationOptions,
 }
 
