@@ -328,20 +328,4 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
 }
 
 //test function
-pub fn read_aqua_data(path: &PathBuf) -> Result<PageData, String> {
-    let data = fs::read_to_string(path);
-    match data {
-        Ok(data) => {
-            let res = serde_json::from_str::<PageData>(&data);
-            match res {
-                Ok(res_data) => Ok(res_data),
-                Err(err_data) => {
-                    return Err(format!("Error, parsing json {}", err_data));
-                }
-            }
-        }
-        Err(e) => {
-            return Err(format!("Error , {}", e));
-        }
-    }
-}
+

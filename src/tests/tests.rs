@@ -1,11 +1,28 @@
 #[cfg(test)]
 pub mod tests {
-    use std::path::Path;
+    use std::{fs, path::{Path, PathBuf}};
 
     use aqua_verifier_rs_types::models::page_data::PageData;
 
-    use crate::util::{read_aqua_data, verify_content_util, verify_metadata_util, verify_signature_util};
+    use crate::util::{ verify_content_util, verify_metadata_util, verify_signature_util};
 
+     fn read_aqua_data(path: &PathBuf) -> Result<PageData, String> {
+        let data = fs::read_to_string(path);
+        match data {
+            Ok(data) => {
+                let res = serde_json::from_str::<PageData>(&data);
+                match res {
+                    Ok(res_data) => Ok(res_data),
+                    Err(err_data) => {
+                        return Err(format!("Error, parsing json {}", err_data));
+                    }
+                }
+            }
+            Err(e) => {
+                return Err(format!("Error , {}", e));
+            }
+        }
+    }
 
     #[test]
     fn test_verify_file_content() {
