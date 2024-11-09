@@ -14,7 +14,7 @@ use crate::{
 const UNSUPPORTED_VERSION: &str = "UNSUPPORTED VERSION";
 
 #[derive(Debug)]
-struct VerificationOptions {
+pub struct VerificationOptions {
     version: f32,
     strict: bool,
     allow_null: bool,
