@@ -2,12 +2,10 @@ use aqua_verifier_rs_types::models::base64::Base64;
 use aqua_verifier_rs_types::models::content::RevisionContent;
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
-use aqua_verifier_rs_types::models::page_data::PageData;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
-use base64::decode;
-use ethers::types::H512;
+use crate::verification_::metadata_hash;
 use ethers::utils::hash_message;
 use libsecp256k1::recover;
 use sha3::{Digest, Sha3_512};
@@ -85,8 +83,8 @@ pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
 
     let hash_gen = hex::encode(hash_fromb64.unwrap());
 
-    logs.push(format!("Info : Hash generated {}", hash_gen));
-    logs.push(format!("Info : file Hash in chain  {}", file_content_hash.to_string()));
+    // logs.push(format!("Info : Hash generated {}", hash_gen));
+    // logs.push(format!("Info : file Hash in chain  {}", file_content_hash.to_string()));
     if file_content_hash.to_string() != hash_gen {
         logs.push("Error :  File content hash does not match the genrated hash".to_string());
         return (
@@ -123,14 +121,19 @@ pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
 }
 
 pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
-    let metadata_hash = calculate_metadata_hash(
-        data.domain_id.clone(),
-        data.time_stamp.clone(),
-        data.previous_verification_hash,
-        data.merge_hash,
-    );
-    if metadata_hash == data.metadata_hash.to_string() {
-        (true, metadata_hash)
+    // let metadata_hash = calculate_metadata_hash(
+    //     data.domain_id.clone(),
+    //     data.time_stamp.clone(),
+    //     data.previous_verification_hash,
+    //     data.merge_hash,
+    // );
+
+    let metadata_hash = metadata_hash(data.domain_id.clone().as_str(), &data.time_stamp.clone(), None);
+    println!("Metadata hash generated {}", metadata_hash);
+    println!("Metadata hash stored {}", data.metadata_hash.to_string());
+
+    if metadata_hash.to_string() == data.metadata_hash.to_string() {
+        (true, metadata_hash.to_string())
     } else {
         (false, "Metadata hash does not match".to_string())
     }
