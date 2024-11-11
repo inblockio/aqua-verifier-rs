@@ -1,3 +1,4 @@
+use crate::verification_::metadata_hash;
 use aqua_verifier_rs_types::models::base64::Base64;
 use aqua_verifier_rs_types::models::content::RevisionContent;
 use aqua_verifier_rs_types::models::hash::Hash;
@@ -5,7 +6,6 @@ use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
-use crate::verification_::metadata_hash;
 use ethers::utils::hash_message;
 use libsecp256k1::recover;
 use sha3::{Digest, Sha3_512};
@@ -20,7 +20,7 @@ use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 pub struct VerifyFileResult {
     pub file_hash: Option<String>,
     pub error_message: Option<String>,
-    pub logs : Vec<String>
+    pub logs: Vec<String>,
 }
 
 pub fn get_hash_sum(content: &str) -> String {
@@ -63,7 +63,7 @@ fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
 }
 
 pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
-    let mut logs : Vec<String>= Vec::new();
+    let mut logs: Vec<String> = Vec::new();
 
     let file_content_hash = data.content.file_hash;
     let file_content = data.file.unwrap().data;
@@ -76,7 +76,7 @@ pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
             VerifyFileResult {
                 file_hash: None,
                 error_message: Some("unable to decode bytes ".to_string()),
-                logs:logs
+                logs: logs,
             },
         );
     }
@@ -92,7 +92,7 @@ pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
             VerifyFileResult {
                 file_hash: None,
                 error_message: Some("File content hash does not match ".to_string()),
-                logs:logs
+                logs: logs,
             },
         );
     }
@@ -102,7 +102,7 @@ pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
         VerifyFileResult {
             file_hash: Some(file_content_hash.to_string()),
             error_message: None,
-            logs:logs
+            logs: logs,
         },
     )
 }
@@ -128,7 +128,11 @@ pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     //     data.merge_hash,
     // );
 
-    let metadata_hash = metadata_hash(data.domain_id.clone().as_str(), &data.time_stamp.clone(), None);
+    let metadata_hash = metadata_hash(
+        data.domain_id.clone().as_str(),
+        &data.time_stamp.clone(),
+        None,
+    );
     println!("Metadata hash generated {}", metadata_hash);
     println!("Metadata hash stored {}", data.metadata_hash.to_string());
 
@@ -174,60 +178,69 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
         hash_message(padded_message),
         ethers::types::Signature::from_str(signature_string.as_str()),
     ) {
-        (_hashed_msg, Ok(sig)) => {
+        (hashed_msg, Ok(sig)) => {
             println!("Gen signature {}", sig.clone());
 
-            let clean_input_1 = if sig.to_string().to_lowercase().starts_with("0x") {
-                sig.to_string().to_lowercase()[2..].to_string()
-            } else {
-                sig.to_string().to_lowercase()
-            };
-            let clean_input_2 = if signature_string.to_lowercase().starts_with("0x") {
-                signature_string.to_lowercase()[2..].to_string()
-            } else {
-                signature_string.to_lowercase()
-            };
-
-            signature_ok = clean_input_1 == clean_input_2;
-
-            status = if signature_ok {
-                "Signature is Valid".to_string()
-            } else {
-                "Signature is invalid".to_string()
-            };
-
-            //todo to be reviewed
-            // match ethers::core::types::Signature::recover(&sig, hashed_msg) {
-            //     Ok(recovered_address) => {
-
-            // let clean_input_1 = if recovered_address.to_string().to_lowercase().starts_with("0x") {
-            //     recovered_address.to_string().to_lowercase()[2..].to_string()
+            // let clean_input_1 = if sig.to_string().to_lowercase().starts_with("0x") {
+            //     sig.to_string().to_lowercase()[2..].to_string()
             // } else {
-            //     recovered_address.to_string().to_lowercase()
+            //     sig.to_string().to_lowercase()
             // };
-            // let clean_input_2 = if data.wallet_address.to_string().to_lowercase().starts_with("0x") {
-            //     data.wallet_address.to_string().to_lowercase()[2..].to_string()
-            // }else{
-            //     data.wallet_address.to_string().to_lowercase()
+            // let clean_input_2 = if signature_string.to_lowercase().starts_with("0x") {
+            //     signature_string.to_lowercase()[2..].to_string()
+            // } else {
+            //     signature_string.to_lowercase()
             // };
 
-            //         println!("1 {:#?}",clean_input_1 );
-            //         println!("2 {:#?}",clean_input_2 );
-
-            // signature_ok =  clean_input_1==clean_input_2;
-            // // signature_ok = recovered_address.to_string().to_lowercase()
-            // //     == data.wallet_address.to_string().to_lowercase();
+            // signature_ok = clean_input_1 == clean_input_2;
 
             // status = if signature_ok {
             //     "Signature is Valid".to_string()
             // } else {
             //     "Signature is invalid".to_string()
             // };
-            //     }
-            //     Err(e) => {
-            //         status = format!("An error occurred retrieving signature: {}", e);
-            //     }
-            // }
+
+            //todo to be reviewed
+            match ethers::core::types::Signature::recover(&sig, hashed_msg) {
+                Ok(recovered_address_long) => {
+                    let recovered_address = format!("{:?}", recovered_address_long);
+                    let clean_input_1 = if recovered_address
+                        .to_string()
+                        .to_lowercase()
+                        .starts_with("0x")
+                    {
+                        recovered_address.to_string().to_lowercase()[2..].to_string()
+                    } else {
+                        recovered_address.to_string().to_lowercase()
+                    };
+                    let clean_input_2 = if data
+                        .wallet_address
+                        .to_string()
+                        .to_lowercase()
+                        .starts_with("0x")
+                    {
+                        data.wallet_address.to_string().to_lowercase()[2..].to_string()
+                    } else {
+                        data.wallet_address.to_string().to_lowercase()
+                    };
+
+                    println!("1 {:#?}", clean_input_1);
+                    println!("2 {:#?}", clean_input_2);
+
+                    signature_ok = clean_input_1 == clean_input_2;
+                    // signature_ok = recovered_address.to_string().to_lowercase()
+                    //     == data.wallet_address.to_string().to_lowercase();
+
+                    status = if signature_ok {
+                        "Signature is Valid".to_string()
+                    } else {
+                        "Signature is invalid".to_string()
+                    };
+                }
+                Err(e) => {
+                    status = format!("An error occurred retrieving signature: {}", e);
+                }
+            }
         }
         (_, Err(e)) => {
             // Handle invalid signature format
@@ -339,4 +352,3 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
 }
 
 //test function
-
