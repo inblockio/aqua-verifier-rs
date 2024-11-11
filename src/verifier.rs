@@ -18,12 +18,12 @@ use aqua_verifier_rs_types::models::timestamp::Timestamp;
 use aqua_verifier_rs_types::models::witness::RevisionWitness;
 use sha3::Digest;
 
-use crate::util::{all_successful_verifications, verify_content_util, verify_file_util, verify_metadata_util, verify_signature_util, verify_witness_util};
-use crate::verification_::{content_hash, metadata_hash, verification_hash};
+use crate::util::{all_successful_verifications, verify_content_util, verify_file_util, verify_metadata_util, verify_signature_util, verify_witness_util, content_hash, metadata_hash, verification_hash};
+
 
 const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
 
-pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_look_up: bool) -> RevisionVerificationResult {
+pub(crate)  fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_look_up: bool) -> RevisionVerificationResult {
     let mut logs: Vec<String> = Vec::new();
     let default_result_status: ResultStatus = ResultStatus {
         status: ResultStatusEnum::MISSING,
@@ -133,7 +133,7 @@ pub fn verify_revision(revision: Revision, alchemy_key: String, do_alchemy_key_l
     return revision_result;
 }
 
-pub fn verify_signature(
+pub(crate)  fn verify_signature(
     signature: RevisionSignature,
     previous_verification_hash: Hash,
 ) -> ResultStatus {
@@ -156,7 +156,7 @@ pub fn verify_signature(
     return default_result_status;
 }
 
-pub fn verify_witness(
+pub(crate)  fn verify_witness(
     witness: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
@@ -186,7 +186,7 @@ pub fn verify_witness(
     return default_result_status;
 }
 
-pub fn verify_aqua_chain(
+pub(crate)  fn verify_aqua_chain(
     aqua_chain: HashChain,
     alchemy_key: String,
     do_alchemy_key_look_up: bool,
@@ -194,14 +194,14 @@ pub fn verify_aqua_chain(
 
     let mut hash_chain_result: RevisionAquaChainResult = RevisionAquaChainResult {
         successful: true,
-        revisionResults: Vec::new(),
+        revision_results: Vec::new(),
     };
 
     let mut hash_chain_revisions_status: Vec<bool> = Vec::new();
 
     for (_hash, revision) in aqua_chain.revisions {
         let revision_result : RevisionVerificationResult = verify_revision(revision, alchemy_key.clone(), do_alchemy_key_look_up);
-        hash_chain_result.revisionResults.push(revision_result.clone());
+        hash_chain_result.revision_results.push(revision_result.clone());
         let revision_status_result = all_successful_verifications(&revision_result);
         hash_chain_revisions_status.push(revision_status_result);
     }
@@ -212,7 +212,7 @@ pub fn verify_aqua_chain(
 }
  
 // TODO: Fix
-pub fn sign_aqua_chain(aqua_chain: HashChain, revision_content : RevisionContentSignature) -> Result<HashChainWithLog, Vec<String>> {
+pub(crate)  fn sign_aqua_chain(aqua_chain: HashChain, revision_content : RevisionContentSignature) -> Result<HashChainWithLog, Vec<String>> {
     println!(" sign aqua file ....");
     let mut logs: Vec<String> = Vec::new();
     let rs = HashChainWithLog {
@@ -220,11 +220,13 @@ pub fn sign_aqua_chain(aqua_chain: HashChain, revision_content : RevisionContent
         logs: logs,
     };
 
+    
+
     Ok(rs)
 }
 
 // TODO: Fix
-pub fn witness_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
+pub(crate)  fn witness_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
     println!(" witness aqua file ....");
     let mut logs: Vec<String> = Vec::new();
     let rs = HashChainWithLog {
@@ -235,7 +237,7 @@ pub fn witness_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec
     Ok(rs)
 }
 
-pub fn generate_aqua_chain(
+pub(crate)  fn generate_aqua_chain(
     body_bytes: Vec<u8>,
     file_name: String,
     domain_id: String,

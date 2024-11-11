@@ -1,19 +1,13 @@
 // #![deny(warnings)]
 
-//! # Aqua Guardian
-//!
-//! This crate is the part of the [`guardian`](../guardian/index.html) responsible for shared data strucures
-//!
-//! It is part of the [aqua project](https://aqua-protocol.org/).
-//!
+//! # Aqua Verifier Rs
+//! To get started  check aqua_verifier .
+//! All sining, witnessing, verification function are implemented under  AquaVerifier struct .
+//! To absract cmplexity AquaVerifier implementation are implmented in veirifier.rs which is visible only to this crate
 
-// pub mod verification;
-pub mod verification_;
-pub mod revision_integrity;
-pub mod sa;
 pub mod util;
 pub mod model;
 pub mod verifier;
 pub mod  check_etherscan;
-pub mod  aqua_verifier_struct_impl;
+pub mod  aqua_verifier;
 pub mod tests;

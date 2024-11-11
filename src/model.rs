@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RevisionAquaChainResult {
     pub successful: bool,
-    pub revisionResults : Vec<RevisionVerificationResult>
+    pub revision_results : Vec<RevisionVerificationResult>
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

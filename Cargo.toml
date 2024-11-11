@@ -21,6 +21,7 @@ chrono = "0.4.38"
 async-trait = "0.1.83"
 base64 = "0.22.1"
 hex = "0.4.3"
+ethaddr = "0.2.2"
 
 
 [dev-dependencies]
