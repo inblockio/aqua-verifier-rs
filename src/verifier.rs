@@ -240,7 +240,7 @@ pub fn generate_aqua_chain(
     file_name: String,
     domain_id: String,
 ) -> Result<PageDataWithLog, Vec<String>> {
-    println!(" sign aqua file ....");
+  
 
     let mut logs: Vec<String> = Vec::new();
 
