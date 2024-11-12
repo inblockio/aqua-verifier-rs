@@ -134,7 +134,7 @@ checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 [[package]]
 name = "aqua-verifier-rs-types"
 version = "0.1.0"
-source = "git+https://github.com/inblockio/aqua-verifier-rs-types?branch=master#06048cf32a167ee106f6ce246c159214ffe5c8ba"
+source = "git+https://github.com/inblockio/aqua-verifier-rs-types?branch=master#29783ae10b31911065bf86667a2e11d02b982571"
 dependencies = [
  "base64 0.22.1",
  "chrono",

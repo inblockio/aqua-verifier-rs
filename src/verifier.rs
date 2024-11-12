@@ -1,24 +1,28 @@
 use std::collections::BTreeMap;
-use std::fmt::format;
-
 use crate::model::{
-    HashChainWithLog, PageDataWithLog, ResultStatus, ResultStatusEnum, RevisionAquaChainResult,
+     PageDataWithLog, ResultStatus, ResultStatusEnum, RevisionAquaChainResult,
     RevisionVerificationResult,
 };
 use aqua_verifier_rs_types::models::base64::Base64;
-use aqua_verifier_rs_types::models::content::{RevisionContentContent, RevisionContentSignature};
+use aqua_verifier_rs_types::models::content::{RevisionContentContent, RevisionContentSignature, RevisionWitnessInput};
 use aqua_verifier_rs_types::models::content::{FileContent, RevisionContent};
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
 use aqua_verifier_rs_types::models::page_data::PageData;
 use aqua_verifier_rs_types::models::page_data::{HashChain, SiteInfo};
+use aqua_verifier_rs_types::models::public_key::PublicKey;
 use aqua_verifier_rs_types::models::revision::Revision;
-use aqua_verifier_rs_types::models::signature::RevisionSignature;
+use aqua_verifier_rs_types::models::signature::{RevisionSignature, Signature};
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
-use aqua_verifier_rs_types::models::witness::RevisionWitness;
+use aqua_verifier_rs_types::models::tx_hash::TxHash;
+use aqua_verifier_rs_types::models::witness::{RevisionWitness, MerkleNode};
 use sha3::Digest;
 
-use crate::util::{all_successful_verifications, verify_content_util, verify_file_util, verify_metadata_util, verify_signature_util, verify_witness_util, content_hash, metadata_hash, verification_hash};
+use crate::util::{all_successful_verifications,
+     verify_content_util, verify_file_util,
+      verify_metadata_util, verify_signature_util,
+       verify_witness_util, content_hash, metadata_hash, 
+       verification_hash, signature_hash, make_empty_hash, witness_hash};
 
 
 const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
@@ -137,7 +141,7 @@ pub(crate)  fn verify_signature(
     signature: RevisionSignature,
     previous_verification_hash: Hash,
 ) -> ResultStatus {
-    let mut logs: Vec<String> = Vec::new();
+    let  logs: Vec<String> = Vec::new();
 
     let mut default_result_status: ResultStatus = ResultStatus {
         status: ResultStatusEnum::MISSING,
@@ -163,7 +167,7 @@ pub(crate)  fn verify_witness(
     alchemy_key: String,
     do_alchemy_key_look_up: bool,
 ) -> ResultStatus {
-    let mut logs: Vec<String> = Vec::new();
+    let  logs: Vec<String> = Vec::new();
     let mut default_result_status: ResultStatus = ResultStatus {
         status: ResultStatusEnum::MISSING,
         successful: false,
@@ -211,30 +215,213 @@ pub(crate)  fn verify_aqua_chain(
     return hash_chain_result;
 }
  
-// TODO: Fix
-pub(crate)  fn sign_aqua_chain(aqua_chain: HashChain, revision_content : RevisionContentSignature) -> Result<HashChainWithLog, Vec<String>> {
-    println!(" sign aqua file ....");
+
+pub(crate)  fn sign_aqua_chain(mut aqua_chain: PageData,
+    revision_content: RevisionContentSignature) -> Result<(PageData, Vec<String>), Vec<String>>{
+    
     let mut logs: Vec<String> = Vec::new();
-    let rs = HashChainWithLog {
-        chain: aqua_chain,
-        logs: logs,
+    // let rs = HashChainWithLog {
+    //     chain: aqua_chain,
+    //     logs: logs,
+    // };
+
+
+    let mut log_data: Vec<String> = Vec::new();
+    let len = aqua_chain.pages[0].revisions.len();
+
+    let (ver1, rev1) = &aqua_chain.pages[0].revisions[len - 1].clone();
+
+    let mut rev2 = rev1.clone();
+    rev2.witness = None;
+    rev2.metadata.previous_verification_hash = Some(*ver1);
+
+    // Parse input data with proper error handling
+    let sig = match revision_content.signature.parse::<Signature>() {
+        Ok(s) => {
+            log_data.push("Success :  signature  parse successfully".to_string());
+            s
+        }
+        Err(e) => {
+            log_data.push(format!("error : Failed to parse  signature: {:?}", e));
+
+            return Err(log_data);
+        }
+    };
+    let pubk = match revision_content.publickey.parse::<PublicKey>() {
+        Ok(p) => {
+            log_data.push("Success : public  key  parsed successfully".to_string());
+
+            p
+        }
+        Err(e) => {
+            log_data.push(format!("error : Failed to parse  public key: {:?}", e));
+
+            return Err(log_data);
+        }
+    };
+    let addr = match ethaddr::Address::from_str_checksum(&revision_content.wallet_address) {
+        Ok(a) => {
+            log_data.push("wallet address parsed successfully".to_string());
+
+            a
+        }
+        Err(e) => {
+            log_data.push(format!("Failed to parse wallet address: {:?}", e));
+
+            return Err(log_data);
+        }
     };
 
+    let sig_hash = signature_hash(&sig, &pubk);
+
+    rev2.signature = Some(RevisionSignature {
+        signature: sig,
+        public_key: pubk,
+        signature_hash: sig_hash.clone(),
+        wallet_address: addr,
+    });
+
+    let timestamp_current = Timestamp::from(chrono::Utc::now().naive_utc());
+    rev2.metadata.time_stamp = timestamp_current.clone();
+
+    let metadata_hash_current = metadata_hash(
+        &aqua_chain.pages[0].domain_id,
+        &timestamp_current,
+        Some(ver1),
+    );
+
+    let verification_hash_current = verification_hash(
+        &rev2.content.content_hash,
+        &metadata_hash_current,
+        Some(&sig_hash),
+        None,
+    );
+
+    rev2.metadata.metadata_hash = metadata_hash_current;
+    rev2.metadata.verification_hash = verification_hash_current;
+
+    aqua_chain.pages[0]
+        .revisions
+        .push((verification_hash_current, rev2));
+
+    return Ok((aqua_chain, log_data));
     
 
-    Ok(rs)
+    
 }
 
-// TODO: Fix
-pub(crate)  fn witness_aqua_chain(aqua_chain: HashChain) -> Result<HashChainWithLog, Vec<String>> {
-    println!(" witness aqua file ....");
-    let mut logs: Vec<String> = Vec::new();
-    let rs = HashChainWithLog {
-        chain: aqua_chain,
-        logs: logs,
+
+pub(crate)  fn witness_aqua_chain( mut aqua_chain : PageData,  witness_input : RevisionWitnessInput) -> Result<(PageData, Vec<String>), Vec<String>> {
+  
+    let mut log_data: Vec<String> = Vec::new();
+
+    // let mut doc = deserialized.clone();
+    let len = aqua_chain.pages[0].revisions.len();
+
+    let (ver1, rev1) = &aqua_chain.pages[0].revisions[len - 1].clone();
+
+    let mut rev2 = rev1.clone();
+    rev2.metadata.previous_verification_hash = Some(*ver1);
+
+    let tx_hash = match witness_input.tx_hash.parse::<TxHash>() {
+        Ok(s) => s,
+        Err(e) => {
+            log_data.push(format!("Error :  Failed to to parse tx hash: {:?}", e));
+            return Err(log_data);
+        }
     };
 
-    Ok(rs)
+    log_data.push(format!("Success :  Parsed tx hash: {:?}", tx_hash));
+   
+    let wallet_address = match ethaddr::Address::from_str_checksum(&witness_input.wallet_address) {
+        Ok(a) => a,
+        Err(e) => {
+           
+            log_data.push(format!("Error :  Failed to parse wallet address: {:?}", e));
+            return Err(log_data);
+        }
+    };
+    log_data.push(format!(
+        "Success  :  parsed wallet address: {:?}",
+        wallet_address
+    ));
+
+    let domain_snapshot_genesis_string = &aqua_chain.pages.get(0).unwrap().genesis_hash;
+
+    let mut hasher = sha3::Sha3_512::default();
+    hasher.update("");
+
+    let domain_snapshot_genesis_hash = Hash::from(hasher.finalize());
+    
+    let witness_hash_data = witness_hash(
+        &domain_snapshot_genesis_hash,
+        &rev1.metadata.verification_hash,
+        witness_input.network.as_str(),
+        &tx_hash,
+    );
+    
+
+    let mut merkle_tree_successor_hasher = sha3::Sha3_512::default();
+    merkle_tree_successor_hasher.update(format!(
+        "{}{}",
+        &rev1.metadata.verification_hash.to_string(),
+        make_empty_hash().to_string()
+    ));
+
+    let merkle_tree_successor = Hash::from(merkle_tree_successor_hasher.finalize());
+
+    let mut merkle_tree = Vec::new();
+    merkle_tree.push(MerkleNode {
+        left_leaf: rev1.metadata.verification_hash,
+        right_leaf: make_empty_hash(),
+        successor: merkle_tree_successor,
+    });
+
+    let mut hasher_verification = sha3::Sha3_512::default();
+    hasher_verification.update(format!(
+        "{}{}",
+        domain_snapshot_genesis_hash.to_string(),
+        &rev1.metadata.verification_hash.to_string()
+    ));
+
+    let witness_event_verification_hash = Hash::from(hasher_verification.finalize());
+    
+
+    rev2.witness = Some(RevisionWitness {
+        domain_snapshot_genesis_hash: domain_snapshot_genesis_hash,
+        merkle_root: rev1.metadata.verification_hash,
+        witness_network: witness_input.network,
+        witness_event_transaction_hash: tx_hash,
+        witness_event_verification_hash: witness_event_verification_hash,
+        witness_hash: witness_hash_data,
+        structured_merkle_proof: merkle_tree,
+    });
+
+    rev2.signature = None;
+
+    let timestamp_current = Timestamp::from(chrono::Utc::now().naive_utc());
+    rev2.metadata.time_stamp = timestamp_current.clone();
+
+
+    let metadata_hash_current =
+        metadata_hash(&aqua_chain.pages[0].domain_id, &timestamp_current, Some(ver1));
+
+    let verification_hash_current = verification_hash(
+        &rev2.content.content_hash,
+        &metadata_hash_current,
+        None,
+        Some(&witness_hash_data),
+    );
+
+    rev2.metadata.metadata_hash = metadata_hash_current;
+    rev2.metadata.verification_hash = verification_hash_current;
+
+    aqua_chain.pages[0]
+        .revisions
+        .push((verification_hash_current, rev2));
+
+    return Ok((aqua_chain, log_data));
+    
 }
 
 pub(crate)  fn generate_aqua_chain(

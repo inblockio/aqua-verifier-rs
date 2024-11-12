@@ -1,18 +1,16 @@
 use aqua_verifier_rs_types::crypt;
-use aqua_verifier_rs_types::models::base64::Base64;
 use aqua_verifier_rs_types::models::content::RevisionContent;
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
 use aqua_verifier_rs_types::models::revision::Revision;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
+use aqua_verifier_rs_types::models::tx_hash::TxHash;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use ethers::utils::hash_message;
 use sha3::{Digest, Sha3_512};
-use std::fmt::format;
-use std::path::PathBuf;
 use std::str::FromStr;
-use std::{fs, str};
+use std::str;
 use std::collections::BTreeMap;
 
 use aqua_verifier_rs_types::models::signature::Signature;
@@ -40,6 +38,7 @@ pub fn get_hash_sum(content: &str) -> String {
 
 
 
+#[allow(deprecated)]
 fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
     // Decode the Base64 string
     let decoded_bytes_result = base64::decode(b64); //.expect("Failed to decode Base64 string");
@@ -160,6 +159,7 @@ pub fn calculate_metadata_hash(
     get_hash_sum(&content)
 }
 
+#[warn(unused_assignments)]
 pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -> (bool, String) {
     if verification_hash.is_empty() {
         return (false, "Verification hash must not be empty".to_string());
@@ -237,6 +237,9 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
                     } else {
                         "Signature is invalid".to_string()
                     };
+
+                    
+
                 }
                 Err(e) => {
                     status = format!("An error occurred retrieving signature: {}", e);
@@ -256,8 +259,8 @@ pub fn verify_witness_util(
     witness_data: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
-    alchemy_key: String,
-    do_alchemy_key_look_up: bool,
+    _alchemy_key: String,
+    _do_alchemy_key_look_up: bool,
 ) -> (bool, String) {
     let actual_witness_event_verification_hash = get_hash_sum(
         &(witness_data
@@ -353,6 +356,24 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
 }
 
 
+pub fn witness_hash(
+    domain_snapshot_genesis_hash: &Hash,
+    merkle_root: &Hash,
+    witness_network: &str,
+    witness_event_transaction_hash: &TxHash,
+) -> Hash {
+    // 2.a create hasher {w}
+    let mut w = crypt::Hasher::default();
+    // 2.b add rev.witness.domain_snapshot_genesis_hash to hasher {w}
+    w.update(domain_snapshot_genesis_hash.to_stackstr());
+    // 2.c add rev.witness.merkle_root to hasher {w}
+    w.update(merkle_root.to_stackstr());
+    // 2.d add rev.witness.witness_network to hasher {w}
+    w.update(witness_network);
+    // 2.e add rev.witness.witness_event_transaction_hash to hasher {w}
+    w.update(witness_event_transaction_hash.to_stackstr());
+    Hash::from(w.finalize())
+}
 
 
 pub fn signature_hash(signature: &Signature, public_key: &PublicKey) -> Hash {
@@ -545,3 +566,12 @@ pub fn compute_content_hash(content_par: &RevisionContent) -> Result<Hash, Strin
     Ok(content_hash_current)
 }
 
+
+
+
+pub fn make_empty_hash() -> Hash {
+    let mut hasher = sha3::Sha3_512::default();
+    hasher.update("");
+    let empty_hash = Hash::from(hasher.finalize());
+    empty_hash
+}
