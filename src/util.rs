@@ -121,18 +121,17 @@ pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
 }
 
 pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
-    // let metadata_hash = calculate_metadata_hash(
-    //     data.domain_id.clone(),
-    //     data.time_stamp.clone(),
-    //     data.previous_verification_hash,
-    //     data.merge_hash,
-    // );
-
-    let metadata_hash = metadata_hash(
-        data.domain_id.clone().as_str(),
-        &data.time_stamp.clone(),
-        None,
+    let metadata_hash = calculate_metadata_hash(
+        data.domain_id.clone(),
+        data.time_stamp.clone(),
+        data.previous_verification_hash,
+        data.merge_hash,
     );
+    // let metadata_hash = metadata_hash(
+    //     data.domain_id.clone().as_str(),
+    //     &data.time_stamp.clone(),
+    //     None,
+    // );
     println!("Metadata hash generated {}", metadata_hash);
     println!("Metadata hash stored {}", data.metadata_hash.to_string());
 
