@@ -220,12 +220,7 @@ pub(crate)  fn sign_aqua_chain(mut aqua_chain: PageData,
     revision_content: RevisionContentSignature) -> Result<(PageData, Vec<String>), Vec<String>>{
     
     let mut logs: Vec<String> = Vec::new();
-    // let rs = HashChainWithLog {
-    //     chain: aqua_chain,
-    //     logs: logs,
-    // };
-
-
+    
     let mut log_data: Vec<String> = Vec::new();
     let len = aqua_chain.pages[0].revisions.len();
 
