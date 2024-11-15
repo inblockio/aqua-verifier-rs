@@ -4,7 +4,7 @@ use aqua_verifier_rs_types::models::page_data::PageData;
 use std::error::Error;
 
 use crate::model::PageDataWithLog;
-use crate::verifier::{generate_aqua_chain, sign_aqua_chain , witness_aqua_chain};
+use crate::verifier::{delete_revision_in_aqua_chain, generate_aqua_chain, sign_aqua_chain, witness_aqua_chain};
 use crate::{
     model::{ResultStatus, RevisionAquaChainResult, RevisionVerificationResult},
     verifier::{verify_aqua_chain, verify_revision, verify_signature, verify_witness},
@@ -160,5 +160,15 @@ impl AquaVerifier {
             return Err(tmp);
         }
         return witness_aqua_chain(aqua_chain, witness_content);
+    }
+
+    pub fn delete_revision_in_aqua_chain(&self, aqua_chain: PageData, revision_count_for_deletion : i32) ->  Result<(PageData, Vec<String>), Vec<String>> {
+        if self.options.version != 1.2 {
+            let mut tmp = Vec::new();
+            tmp.push(UNSUPPORTED_VERSION.to_string());
+            return Err(tmp);
+        }
+        return delete_revision_in_aqua_chain(aqua_chain, revision_count_for_deletion);
+
     }
 }
