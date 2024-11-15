@@ -522,7 +522,7 @@ pub(crate) fn generate_aqua_chain(
                         previous_verification_hash: None,
                         metadata_hash: metadata_hash_current,
                         verification_hash: verification_hash_current,
-                        merge_hash: Some(verification_hash_current), // Todo! Fix me
+                        // merge_hash: Some(verification_hash_current), // Todo! Fix me
                     },
                     signature: None,
                     witness: None,
