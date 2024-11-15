@@ -20,6 +20,7 @@ use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use sha3::Digest;
 use std::collections::BTreeMap;
 use std::fmt::format;
+use std::str::FromStr;
 
 use crate::util::{
     all_successful_verifications, content_hash, make_empty_hash, metadata_hash, signature_hash,
@@ -282,18 +283,48 @@ pub(crate) fn sign_aqua_chain(
             return Err(log_data);
         }
     };
-    let addr = match ethaddr::Address::from_str_checksum(&revision_content.wallet_address) {
-        Ok(a) => {
-            log_data.push("wallet address parsed successfully".to_string());
+    // let address_ = ethaddr::Address::from_str(&revision_content.wallet_address);
+    // let addr = match ethaddr::Address::from_str_checksum(&revision_content.wallet_address) {
+    //     Ok(a) => {
+    //         log_data.push("wallet address parsed successfully".to_string());
 
-            a
-        }
-        Err(e) => {
-            log_data.push(format!("Failed to parse wallet address: {:?}", e));
+    //         a
+    //     }
+    //     Err(e) => {
+    //         log_data.push(format!("Failed to parse wallet address: {:?}", e));
+
+    //         return Err(log_data);
+    //     }
+    // };
+
+    let mut add: Option<ethaddr::Address> = None;
+
+    let address_result = ethaddr::Address::from_str_checksum(&revision_content.wallet_address);
+    if address_result.is_err() {
+        let address_result_2 = ethaddr::Address::from_str(&revision_content.wallet_address);
+        if address_result_2.is_err() {
+            log_data.push(format!(
+                "Failed to parse wallet address from str: {}",
+                revision_content.wallet_address
+            ));
 
             return Err(log_data);
         }
-    };
+        add = Some(address_result_2.unwrap());
+    } else {
+        add = Some(address_result.unwrap());
+    }
+
+    if add.is_none() {
+        log_data.push(format!(
+            "Failed to parse wallet address from checksum: {}",
+            revision_content.wallet_address
+        ));
+
+        return Err(log_data);
+    }
+
+    let addr = add.unwrap();
 
     let sig_hash = signature_hash(&sig, &pubk);
 
@@ -547,7 +578,10 @@ pub(crate) fn delete_revision_in_aqua_chain(
 
     let len = aqua_chain.pages[0].revisions.len() as i32;
 
-    log_data.push(format!("Revisions in chain {} the count provided {}",len , revision_count_for_deletion));
+    log_data.push(format!(
+        "Revisions in chain {} the count provided {}",
+        len, revision_count_for_deletion
+    ));
 
     if revision_count_for_deletion > len {
         log_data.push(
@@ -564,16 +598,18 @@ pub(crate) fn delete_revision_in_aqua_chain(
     let mut chain: Vec<HashChain> = Vec::new();
     let mut copy_chain_par = aqua_chain.pages[0].clone();
 
-    copy_chain_par.revisions.truncate(copy_chain_par.revisions.len() - revision_count_for_deletion as usize);
+    copy_chain_par
+        .revisions
+        .truncate(copy_chain_par.revisions.len() - revision_count_for_deletion as usize);
     let chain_0 = HashChain {
         genesis_hash: copy_chain_par.genesis_hash,
         domain_id: copy_chain_par.domain_id,
         title: copy_chain_par.title,
         namespace: copy_chain_par.namespace,
         chain_height: copy_chain_par.chain_height,
-        revisions: copy_chain_par.revisions ,
+        revisions: copy_chain_par.revisions,
     };
-  
+
     chain.push(chain_0);
     let new_aqua_chain: PageData = PageData {
         pages: chain,
