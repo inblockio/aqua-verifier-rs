@@ -19,6 +19,7 @@ use aqua_verifier_rs_types::models::tx_hash::TxHash;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use sha3::Digest;
 use std::collections::BTreeMap;
+use std::fmt::format;
 
 use crate::util::{
     all_successful_verifications, content_hash, make_empty_hash, metadata_hash, signature_hash,
@@ -545,6 +546,8 @@ pub(crate) fn delete_revision_in_aqua_chain(
     let mut log_data: Vec<String> = Vec::new();
 
     let len = aqua_chain.pages[0].revisions.len() as i32;
+
+    log_data.push(format!("Revisions in chain {} the count provided {}",len , revision_count_for_deletion));
 
     if revision_count_for_deletion > len {
         log_data.push(
