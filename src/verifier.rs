@@ -304,7 +304,7 @@ pub(crate) fn sign_aqua_chain(
         let address_result_2 = ethaddr::Address::from_str(&revision_content.wallet_address);
         if address_result_2.is_err() {
             log_data.push(format!(
-                "Error Failed to parse wallet address from str: {}",
+                "Error : Error Failed to parse wallet address from str: {}",
                 revision_content.wallet_address
             ));
 
