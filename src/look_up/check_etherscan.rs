@@ -9,7 +9,7 @@ use regex::Regex;
 use serde::Deserialize;
 use serde_json::from_value;
 use std::convert::TryFrom;
-use crate::look_up_utils::extract_etherscan_tx_details;
+use crate::look_up::look_up_utils::extract_etherscan_tx_details;
 use crate::look_up::constants::{
     UrlProvider, ALCHEMY_API_KEY_MUST_BE_SET, FAILED_TO_CREATE_PROVIDER,
     FAILED_TO_DESERIALIZE_BLOCK_TIME, FAILED_TO_DESERIALIZE_TRANSACTION, FAILED_TO_GET_BLOCK,
@@ -86,7 +86,7 @@ pub(crate) async fn get_tx_data(
 
     if verification_provider == "self" {
 
-        return extract_etherscan_tx_details(tx_hash);
+        return extract_etherscan_tx_details(tx_hash).await;
     } else {
         let url_prefix = match verification_provider.as_str() {
             "infura" => match verification_provider_chain.as_str() {
