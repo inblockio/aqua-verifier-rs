@@ -31,8 +31,8 @@ const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
 
 pub(crate) fn verify_revision(
     revision: Revision,
-    alchemy_key: String,
-    do_alchemy_key_look_up: bool,
+    verification_platform: String,
+    api_key: String,
 ) -> RevisionVerificationResult {
     let mut logs: Vec<String> = Vec::new();
     let default_result_status: ResultStatus = ResultStatus {
@@ -143,8 +143,8 @@ pub(crate) fn verify_revision(
                 .unwrap()
                 .to_string(),
             revision.witness.unwrap().structured_merkle_proof.len() > 1,
-            alchemy_key,
-            do_alchemy_key_look_up,
+            verification_platform,
+            api_key,
         );
         revision_result.witness_verification.status = ResultStatusEnum::AVAILABLE;
         revision_result.witness_verification.successful = success;
@@ -190,8 +190,8 @@ pub(crate) fn verify_witness(
     witness: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
-    alchemy_key: String,
-    do_alchemy_key_look_up: bool,
+    verification_platform: String,
+    api_key: String,
 ) -> ResultStatus {
     let logs: Vec<String> = Vec::new();
     let mut default_result_status: ResultStatus = ResultStatus {
@@ -205,8 +205,8 @@ pub(crate) fn verify_witness(
         witness,
         verification_hash,
         do_verify_merkle_proof,
-        alchemy_key,
-        do_alchemy_key_look_up,
+        verification_platform,
+        api_key,
     );
 
     default_result_status.status = ResultStatusEnum::AVAILABLE;
@@ -218,8 +218,8 @@ pub(crate) fn verify_witness(
 
 pub(crate) fn verify_aqua_chain(
     aqua_chain: HashChain,
-    alchemy_key: String,
-    do_alchemy_key_look_up: bool,
+    verification_platform: String,
+    api_key: String,
 ) -> RevisionAquaChainResult {
     let mut hash_chain_result: RevisionAquaChainResult = RevisionAquaChainResult {
         successful: true,
@@ -230,7 +230,7 @@ pub(crate) fn verify_aqua_chain(
 
     for (_hash, revision) in aqua_chain.revisions {
         let revision_result: RevisionVerificationResult =
-            verify_revision(revision, alchemy_key.clone(), do_alchemy_key_look_up);
+            verify_revision(revision, verification_platform.clone(), api_key.clone());
         hash_chain_result
             .revision_results
             .push(revision_result.clone());
@@ -547,7 +547,7 @@ pub(crate) fn delete_revision_in_aqua_chain(
 
     let len = aqua_chain.pages[0].revisions.len() as i32;
 
-    log_data.push(format!("Revisions in chain {} the count provided {}",len , revision_count_for_deletion));
+    log_data.push(format!("info : Revisions in chain {} the count provided {}",len , revision_count_for_deletion));
 
     if revision_count_for_deletion > len {
         log_data.push(

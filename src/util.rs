@@ -258,8 +258,8 @@ pub fn verify_witness_util(
     witness_data: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
-    _alchemy_key: String,
-    _do_alchemy_key_look_up: bool,
+    _verification_key: String,
+    _api_key: String,
 ) -> (bool, String) {
     let actual_witness_event_verification_hash = get_hash_sum(
         &(witness_data

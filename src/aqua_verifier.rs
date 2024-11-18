@@ -15,14 +15,17 @@ use aqua_verifier_rs_types::models::{
 };
 
 const UNSUPPORTED_VERSION: &str = "UNSUPPORTED VERSION";
+const KEY_NOT_SET : &str  ="ALCHEMY/INFURA KEY NOT SET";
 
 #[derive(Debug)]
 pub struct VerificationOptions {
     pub version: f32,
     pub strict: bool,
     pub allow_null: bool,
-    pub alchemy_key: String,
-    pub do_alchemy_key_lookup: bool,
+    // pub alchemy_key: String,
+    pub verification_platform: String,
+    // pub do_alchemy_key_lookup: bool,
+    pub api_key: String,
 }
 
 impl Default for VerificationOptions {
@@ -31,8 +34,8 @@ impl Default for VerificationOptions {
             version: 1.2,
             strict: false,
             allow_null: false,
-            alchemy_key: String::new(),
-            do_alchemy_key_lookup: false,
+            verification_platform: "none".to_string(),
+            api_key: "".to_string(),
         }
     }
 }
@@ -47,6 +50,8 @@ impl AquaVerifier {
         let mut options = options.unwrap_or_default();
         options.strict = false;
         options.allow_null = false;
+        options.verification_platform = "none".to_string();
+        options.api_key = "".to_string();
 
         AquaVerifier { options }
     }
@@ -59,14 +64,14 @@ impl AquaVerifier {
         &self,
         revision: &Revision,
     ) -> Result<RevisionVerificationResult, Box<dyn Error>> {
-        if self.options.do_alchemy_key_lookup && self.options.alchemy_key.is_empty() {
-            return Err("ALCHEMY KEY NOT SET".into());
+        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
+            return Err(KEY_NOT_SET.into());
         }
         // Call the actual verification function (needs to be defined)
         Ok(verify_revision(
             revision.clone(),
-            self.options.alchemy_key.clone(),
-            self.options.do_alchemy_key_lookup,
+            self.options.verification_platform.clone(),
+            self.options.api_key.clone(),
         ))
     }
 
@@ -91,16 +96,16 @@ impl AquaVerifier {
         if self.options.version != 1.2 {
             return Err(UNSUPPORTED_VERSION.into());
         }
-        if self.options.do_alchemy_key_lookup && self.options.alchemy_key.is_empty() {
-            return Err("ALCHEMY KEY NOT SET".into());
+        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
+            return Err(KEY_NOT_SET.into());
         }
         // Call the actual witness verification function (needs to be defined)
         Ok(verify_witness(
             witness.clone(),
             verification_hash.to_string(),
             do_verify_merkle_proof,
-            self.options.alchemy_key.clone(),
-            self.options.do_alchemy_key_lookup,
+            self.options.verification_platform.clone(),
+            self.options.api_key.clone(),
         ))
     }
 
@@ -111,14 +116,15 @@ impl AquaVerifier {
         if self.options.version != 1.2 {
             return Err(UNSUPPORTED_VERSION.into());
         }
-        if self.options.do_alchemy_key_lookup && self.options.alchemy_key.is_empty() {
-            return Err("ALCHEMY KEY NOT SET".into());
+        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
+
+            return Err(KEY_NOT_SET.into());
         }
         // Call the actual Aqua chain verification function (needs to be defined)
         Ok(verify_aqua_chain(
             hash_chain.clone(),
-            self.options.alchemy_key.clone(),
-            self.options.do_alchemy_key_lookup,
+            self.options.verification_platform.clone(),
+            self.options.api_key.clone(),
         ))
     }
 
