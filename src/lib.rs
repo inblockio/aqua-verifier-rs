@@ -8,6 +8,6 @@
 pub mod util;
 pub mod model;
 pub mod verifier;
-pub mod  check_etherscan;
+pub mod  look_up;
 pub mod  aqua_verifier;
 pub mod tests;

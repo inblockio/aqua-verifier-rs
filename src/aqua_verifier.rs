@@ -22,9 +22,8 @@ pub struct VerificationOptions {
     pub version: f32,
     pub strict: bool,
     pub allow_null: bool,
-    // pub alchemy_key: String,
     pub verification_platform: String,
-    // pub do_alchemy_key_lookup: bool,
+    pub verification_platform_chain: String,
     pub api_key: String,
 }
 
@@ -35,6 +34,7 @@ impl Default for VerificationOptions {
             strict: false,
             allow_null: false,
             verification_platform: "none".to_string(),
+            verification_platform_chain: "sepolia".to_string(),
             api_key: "".to_string(),
         }
     }
@@ -51,6 +51,7 @@ impl AquaVerifier {
         options.strict = false;
         options.allow_null = false;
         options.verification_platform = "none".to_string();
+        options.verification_platform_chain = "sepolia".to_string();
         options.api_key = "".to_string();
 
         AquaVerifier { options }
