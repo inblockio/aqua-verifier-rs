@@ -72,6 +72,7 @@ impl AquaVerifier {
         Ok(verify_revision(
             revision.clone(),
             self.options.verification_platform.clone(),
+            self.options.verification_platform_chain.clone(),
             self.options.api_key.clone(),
         ))
     }
@@ -106,6 +107,7 @@ impl AquaVerifier {
             verification_hash.to_string(),
             do_verify_merkle_proof,
             self.options.verification_platform.clone(),
+            self.options.verification_platform_chain.clone(),
             self.options.api_key.clone(),
         ))
     }
@@ -125,6 +127,7 @@ impl AquaVerifier {
         Ok(verify_aqua_chain(
             hash_chain.clone(),
             self.options.verification_platform.clone(),
+            self.options.verification_platform_chain.clone(),
             self.options.api_key.clone(),
         ))
     }

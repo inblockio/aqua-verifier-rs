@@ -33,6 +33,7 @@ const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
 pub(crate) fn verify_revision(
     revision: Revision,
     verification_platform: String,
+    verification_platform_chain: String,
     api_key: String,
 ) -> RevisionVerificationResult {
     let mut logs: Vec<String> = Vec::new();
@@ -135,8 +136,8 @@ pub(crate) fn verify_revision(
     // Verify Witness (asynchronous)
     if revision.witness.is_some() {
         logs.push("Info : Verifying  a witness".to_string());
-        // TODO! Fix me
-        let (success, message) = verify_witness_util(
+
+        let (success, message, logs_data) = verify_witness_util(
             revision.witness.clone().unwrap(),
             revision
                 .metadata
@@ -145,17 +146,25 @@ pub(crate) fn verify_revision(
                 .to_string(),
             revision.witness.unwrap().structured_merkle_proof.len() > 1,
             verification_platform,
+            verification_platform_chain,
             api_key,
         );
+        logs_data
+            .iter()
+            .for_each(|item| logs.push(format!("\t\t {}", item)));
+
         revision_result.witness_verification.status = ResultStatusEnum::AVAILABLE;
         revision_result.witness_verification.successful = success;
         revision_result.witness_verification.message = message.clone();
+        
 
         if success {
             logs.push("Success : successfully  verified a witness".to_string());
         } else {
             logs.push(format!("Error :  failed to verify a witness {}", message));
         }
+
+        revision_result.witness_verification.logs = logs;
     }
 
     // Update the overall successful status
@@ -192,27 +201,40 @@ pub(crate) fn verify_witness(
     verification_hash: String,
     do_verify_merkle_proof: bool,
     verification_platform: String,
+    verification_platform_chain: String,
     api_key: String,
 ) -> ResultStatus {
-    let logs: Vec<String> = Vec::new();
+    let mut logs: Vec<String> = Vec::new();
     let mut default_result_status: ResultStatus = ResultStatus {
         status: ResultStatusEnum::MISSING,
         successful: false,
         message: "default".to_string(),
-        logs: logs,
+        logs: logs.clone(),
     };
 
-    let (witness_ok, witness_message) = verify_witness_util(
-        witness,
+    let (success, message, logs_data) = verify_witness_util(
+        witness.clone(),
         verification_hash,
         do_verify_merkle_proof,
         verification_platform,
+        verification_platform_chain,
         api_key,
     );
+    logs_data
+        .iter()
+        .for_each(|item| logs.push(format!("\t\t {}", item)));
 
     default_result_status.status = ResultStatusEnum::AVAILABLE;
-    default_result_status.successful = witness_ok;
-    default_result_status.message = witness_message;
+    default_result_status.successful = success;
+    default_result_status.message = message.clone();
+
+    if success {
+        logs.push("Success : successfully  verified a witness".to_string());
+    } else {
+        logs.push(format!("Error :  failed to verify a witness {}", message));
+    }
+
+    default_result_status.logs = logs;
 
     return default_result_status;
 }
@@ -220,6 +242,7 @@ pub(crate) fn verify_witness(
 pub(crate) fn verify_aqua_chain(
     aqua_chain: HashChain,
     verification_platform: String,
+    verification_platform_chain: String,
     api_key: String,
 ) -> RevisionAquaChainResult {
     let mut hash_chain_result: RevisionAquaChainResult = RevisionAquaChainResult {
@@ -230,8 +253,12 @@ pub(crate) fn verify_aqua_chain(
     let mut hash_chain_revisions_status: Vec<bool> = Vec::new();
 
     for (_hash, revision) in aqua_chain.revisions {
-        let revision_result: RevisionVerificationResult =
-            verify_revision(revision, verification_platform.clone(), api_key.clone());
+        let revision_result: RevisionVerificationResult = verify_revision(
+            revision,
+            verification_platform.clone(),
+            verification_platform_chain.clone(),
+            api_key.clone(),
+        );
         hash_chain_result
             .revision_results
             .push(revision_result.clone());

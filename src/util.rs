@@ -1,21 +1,22 @@
+use crate::look_up::look_up::get_tx_data;
 use aqua_verifier_rs_types::crypt;
 use aqua_verifier_rs_types::models::content::RevisionContent;
 use aqua_verifier_rs_types::models::hash::Hash;
 use aqua_verifier_rs_types::models::metadata::RevisionMetadata;
+use aqua_verifier_rs_types::models::public_key::PublicKey;
 use aqua_verifier_rs_types::models::revision::Revision;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
+use aqua_verifier_rs_types::models::signature::Signature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
-use aqua_verifier_rs_types::models::tx_hash::TxHash;
+use aqua_verifier_rs_types::models::tx_hash::{self, TxHash};
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use ethers::utils::hash_message;
 use sha3::{Digest, Sha3_512};
-use std::str::FromStr;
-use std::str;
+use tokio::runtime::Runtime;
 use std::collections::BTreeMap;
-
-use aqua_verifier_rs_types::models::signature::Signature;
-use aqua_verifier_rs_types::models::public_key::PublicKey;
-
+use std::fmt::format;
+use std::str;
+use std::str::FromStr;
 
 use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 
@@ -35,8 +36,6 @@ pub fn get_hash_sum(content: &str) -> String {
         format!("{:x}", hasher.finalize())
     }
 }
-
-
 
 #[allow(deprecated)]
 fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
@@ -236,9 +235,6 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
                     } else {
                         "Signature is invalid".to_string()
                     };
-
-                    
-
                 }
                 Err(e) => {
                     status = format!("An error occurred retrieving signature: {}", e);
@@ -258,9 +254,12 @@ pub fn verify_witness_util(
     witness_data: RevisionWitness,
     verification_hash: String,
     do_verify_merkle_proof: bool,
-    _verification_key: String,
-    _api_key: String,
-) -> (bool, String) {
+    verification_platform: String,
+    verification_platform_chain: String,
+    api_key: String,
+) -> (bool, String, Vec<String>) {
+    let logs = Vec::new();
+
     let actual_witness_event_verification_hash = get_hash_sum(
         &(witness_data
             .domain_snapshot_genesis_hash
@@ -272,7 +271,7 @@ pub fn verify_witness_util(
     if actual_witness_event_verification_hash
         != witness_data.witness_event_verification_hash.to_string()
     {
-        return (false, "Verification hashes do not match".to_string());
+        return (false, "Verification hashes do not match".to_string(), logs);
     }
 
     if do_verify_merkle_proof {
@@ -280,6 +279,7 @@ pub fn verify_witness_util(
             return (
                 true,
                 "Verification hash is the same as domain snapshot genesis hash".to_string(),
+                logs
             );
         } else {
             let merkle_proof_is_ok =
@@ -291,12 +291,39 @@ pub fn verify_witness_util(
                 } else {
                     "Error verifying merkle proof".to_string()
                 },
+                logs
             );
         }
     }
 
+    if  verification_platform == "none"{
+
+        (true, "Look up not performed.".to_string(), logs)
+    }else{
+
+    let tx_hash = witness_data.witness_event_transaction_hash.clone();
+    let tx_hash_string = format!("{}", tx_hash);
+    let tx_hash_par = tx_hash_string.as_str();
+    // Create a new runtime
+    let rt = Runtime::new().unwrap();
+
+     // Block on the async function to get its result
+    let get_tx_data_res = rt.block_on( get_tx_data(
+        tx_hash_par,
+        verification_platform,
+        verification_platform_chain,
+        api_key,
+    ));
+
+    if get_tx_data_res.is_ok() {
+        (true, "Look up performed.".to_string(), logs)
+    }else{
+        (false, "Look up failed.".to_string(), logs)
+    }
+
+}
     // TODO: Implement the checkTransaction function
-    (true, "Look up not performed.".to_string())
+   
 }
 
 pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: String) -> bool {
@@ -354,7 +381,6 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
     true
 }
 
-
 pub fn witness_hash(
     domain_snapshot_genesis_hash: &Hash,
     merkle_root: &Hash,
@@ -373,7 +399,6 @@ pub fn witness_hash(
     w.update(witness_event_transaction_hash.to_stackstr());
     Hash::from(w.finalize())
 }
-
 
 pub fn signature_hash(signature: &Signature, public_key: &PublicKey) -> Hash {
     // 4.a create hasher {s}
@@ -564,9 +589,6 @@ pub fn compute_content_hash(content_par: &RevisionContent) -> Result<Hash, Strin
 
     Ok(content_hash_current)
 }
-
-
-
 
 pub fn make_empty_hash() -> Hash {
     let mut hasher = sha3::Sha3_512::default();
