@@ -463,6 +463,8 @@ pub(crate) fn witness_aqua_chain(
 
     let witness_event_verification_hash = Hash::from(hasher_verification.finalize());
 
+
+    
     rev2.witness = Some(RevisionWitness {
         domain_snapshot_genesis_hash: domain_snapshot_genesis_hash,
         merkle_root: rev1.metadata.verification_hash,
