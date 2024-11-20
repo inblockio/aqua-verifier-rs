@@ -33,7 +33,7 @@ const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
 pub(crate) fn verify_revision(
     revision: Revision,
     verification_platform: String,
-    verification_platform_chain: String,
+    chain: String,
     api_key: String,
 ) -> RevisionVerificationResult {
     let mut logs: Vec<String> = Vec::new();
@@ -146,7 +146,7 @@ pub(crate) fn verify_revision(
                 .to_string(),
             revision.witness.unwrap().structured_merkle_proof.len() > 1,
             verification_platform,
-            verification_platform_chain,
+            chain,
             api_key,
         );
         logs_data
@@ -201,7 +201,7 @@ pub(crate) fn verify_witness(
     verification_hash: String,
     do_verify_merkle_proof: bool,
     verification_platform: String,
-    verification_platform_chain: String,
+    chain: String,
     api_key: String,
 ) -> ResultStatus {
     let mut logs: Vec<String> = Vec::new();
@@ -217,7 +217,7 @@ pub(crate) fn verify_witness(
         verification_hash,
         do_verify_merkle_proof,
         verification_platform,
-        verification_platform_chain,
+        chain,
         api_key,
     );
     logs_data
@@ -242,7 +242,7 @@ pub(crate) fn verify_witness(
 pub(crate) fn verify_aqua_chain(
     aqua_chain: HashChain,
     verification_platform: String,
-    verification_platform_chain: String,
+    chain: String,
     api_key: String,
 ) -> RevisionAquaChainResult {
     let mut hash_chain_result: RevisionAquaChainResult = RevisionAquaChainResult {
@@ -256,7 +256,7 @@ pub(crate) fn verify_aqua_chain(
         let revision_result: RevisionVerificationResult = verify_revision(
             revision,
             verification_platform.clone(),
-            verification_platform_chain.clone(),
+            chain.clone(),
             api_key.clone(),
         );
         hash_chain_result

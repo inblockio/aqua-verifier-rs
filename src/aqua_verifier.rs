@@ -23,7 +23,7 @@ pub struct VerificationOptions {
     pub strict: bool,
     pub allow_null: bool,
     pub verification_platform: String,
-    pub verification_platform_chain: String,
+    pub chain: String,
     pub api_key: String,
 }
 
@@ -34,7 +34,7 @@ impl Default for VerificationOptions {
             strict: false,
             allow_null: false,
             verification_platform: "none".to_string(),
-            verification_platform_chain: "sepolia".to_string(),
+            chain: "sepolia".to_string(),
             api_key: "".to_string(),
         }
     }
@@ -51,7 +51,7 @@ impl AquaVerifier {
         options.strict = false;
         options.allow_null = false;
         options.verification_platform = "none".to_string();
-        options.verification_platform_chain = "sepolia".to_string();
+        options.chain = "sepolia".to_string();
         options.api_key = "".to_string();
 
         AquaVerifier { options }
@@ -72,7 +72,7 @@ impl AquaVerifier {
         Ok(verify_revision(
             revision.clone(),
             self.options.verification_platform.clone(),
-            self.options.verification_platform_chain.clone(),
+            self.options.chain.clone(),
             self.options.api_key.clone(),
         ))
     }
@@ -107,7 +107,7 @@ impl AquaVerifier {
             verification_hash.to_string(),
             do_verify_merkle_proof,
             self.options.verification_platform.clone(),
-            self.options.verification_platform_chain.clone(),
+            self.options.chain.clone(),
             self.options.api_key.clone(),
         ))
     }
@@ -127,7 +127,7 @@ impl AquaVerifier {
         Ok(verify_aqua_chain(
             hash_chain.clone(),
             self.options.verification_platform.clone(),
-            self.options.verification_platform_chain.clone(),
+            self.options.chain.clone(),
             self.options.api_key.clone(),
         ))
     }

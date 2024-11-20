@@ -255,7 +255,7 @@ pub fn verify_witness_util(
     verification_hash: String,
     do_verify_merkle_proof: bool,
     verification_platform: String,
-    verification_platform_chain: String,
+    chain: String,
     api_key: String,
 ) -> (bool, String, Vec<String>) {
     let logs = Vec::new();
@@ -311,7 +311,7 @@ pub fn verify_witness_util(
     let get_tx_data_res = rt.block_on( get_tx_data(
         tx_hash_par,
         verification_platform,
-        verification_platform_chain,
+        chain,
         api_key,
     ));
 
