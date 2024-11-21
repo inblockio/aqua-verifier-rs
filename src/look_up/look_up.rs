@@ -79,6 +79,8 @@ pub(crate) async fn get_tx_data(
     verification_provider_chain: String,
     api_key: String,
 ) -> Result<(H512, u64), Report> {
+
+    println!("get_tx_data function verification_provider {} verification_provider_chain {} api_key {}  ", verification_provider , verification_provider_chain, api_key);
     // Validate input parameters
     if !["infura", "alchemy", "self"].contains(&verification_provider.as_str()) {
         return Err(eyre::eyre!("Invalid verification provider"));
