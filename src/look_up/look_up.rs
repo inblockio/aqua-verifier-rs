@@ -101,9 +101,9 @@ pub(crate) async fn get_tx_data(
                 _ => return Err(eyre::eyre!("Invalid Infura chain")),
             },
             "alchemy" => match verification_provider_chain.as_str() {
-                "mainnet" => "https://eth-mainnet.alchemyapi.io/v2/",
-                "sepolia" => "https://eth-sepolia.alchemyapi.io/v2/",
-                "holesky" => "https://eth-holesky.alchemyapi.io/v2/",
+                "mainnet" => "https://eth-mainnet.g.alchemy.com/v2/",
+                "sepolia" => "https://eth-sepolia.g.alchemy.com/v2/",
+                "holesky" => "https://eth-holesky.g.alchemy.com/v2/",
                 _ => return Err(eyre::eyre!("Invalid Alchemy chain")),
             },
 
@@ -119,25 +119,6 @@ pub(crate) async fn get_tx_data(
         let provider = Provider::<Http>::try_from(url).wrap_err(FAILED_TO_CREATE_PROVIDER)?;
 
         println!("Provider set successfully");
-
-        // Get the chain ID
-        // let chain_id = provider
-        //     .get_chainid()
-        //     .await
-        //     .wrap_err(FAILED_TO_GET_CHAIN_ID)?;
-
-        // Load the signer private key from the .env file
-        // let wallet_key =
-        //     std::env::var("SIGNER_PRIVATE_KEY").wrap_err(SIGNER_PRIVATE_KEY_MUST_BE_SET)?;
-
-        // Parse the wallet key
-        // let wallet: LocalWallet = wallet_key
-        //     .parse::<LocalWallet>()
-        //     .wrap_err(FAILED_TO_PARSE_WALLET_KEY)?
-        //     .with_chain_id(chain_id.as_u64());
-
-        // Connect the wallet to the provider
-        // let client = SignerMiddleware::new(provider, wallet);
 
         // Parse the transaction hash
         let transaction_hash: H256 = tx_hash.parse().wrap_err(FAILED_TO_PARSE_TRANSACTION_HASH)?;
@@ -161,20 +142,6 @@ pub(crate) async fn get_tx_data(
         // Parse the block number
         let blocknumber = u64::from_str_radix(tx.blockNumber.trim_start_matches("0x"), 16)
             .wrap_err(FAILED_TO_PARSE_BLOCK_NUMBER)?;
-
-        // Get the block
-        // let block = client
-        //     .get_block(blocknumber)
-        //     .await
-        //     .wrap_err(FAILED_TO_GET_BLOCK)?;
-
-        // Deserialize the block time
-        // let blocktime: Blocktime =
-        //     from_value(serde_json::to_value(&block)?).wrap_err(FAILED_TO_DESERIALIZE_BLOCK_TIME)?;
-
-        // Parse the block timestamp
-        // let blocktime_u64 = u64::from_str_radix(blocktime.timestamp.trim_start_matches("0x"), 16)
-        //     .wrap_err(FAILED_TO_PARSE_TIMESTAMP)?;
 
         // Parse the input
         let input = tx.input[10..]
