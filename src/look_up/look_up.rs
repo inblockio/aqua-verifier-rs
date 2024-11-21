@@ -150,15 +150,7 @@ pub(crate) async fn get_tx_data(
 
         println!("Found Transaction input: {:#?}", &tx.input);
 
-        // Validate transaction input
-        // if !validate_transaction_status(&tx.input) {
-        //     return Err(eyre::eyre!("Invalid transaction input"));
-        // }
-
-        // Parse the block number
-        // let blocknumber = u64::from_str_radix(tx.blockNumber.trim_start_matches("0x"), 16)
-        //     .wrap_err(FAILED_TO_PARSE_BLOCK_NUMBER)?;
-
+        
         // Parse the input
         let input = &tx.input[8..];
             // .parse::<H512>()
