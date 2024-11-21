@@ -27,12 +27,12 @@ pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str,chain : String ) 
 
 
     // Selector for transaction timestamp
-    let timestamp_selector = Selector::parse("div.mr-3 > span[title]").unwrap();
-    let timestamp_elem = document.select(&timestamp_selector).next()
-        .ok_or_else(|| eyre::eyre!("Could not find timestamp"))?;
+    // let timestamp_selector = Selector::parse("div.mr-3 > span[title]").unwrap();
+    // let timestamp_elem = document.select(&timestamp_selector).next()
+    //     .ok_or_else(|| eyre::eyre!("Could not find timestamp"))?;
     
-    let timestamp_str = timestamp_elem.value().attr("title")
-        .ok_or_else(|| eyre::eyre!("Could not extract timestamp"))?;
+    // let timestamp_str = timestamp_elem.value().attr("title")
+    //     .ok_or_else(|| eyre::eyre!("Could not extract timestamp"))?;
     
     // Parse timestamp (assuming format like "May-23-2023 10:30:45 AM +UTC")
     // let timestamp = parse_etherscan_timestamp(timestamp_str)?;
