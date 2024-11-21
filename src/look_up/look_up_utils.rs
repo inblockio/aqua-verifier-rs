@@ -6,7 +6,7 @@ use eyre::{Report, Result};
 use reqwest;
 use scraper::{Html, Selector};
 
-pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str) -> Result<(H512, u64)> {
+pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str) -> Result<(String, u64)> {
     let url = format!("https://etherscan.io/tx/{}", tx_hash);
     
     // Fetch Etherscan page
@@ -48,7 +48,7 @@ pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str) -> Result<(H512,
     let input = input_hex.parse::<H512>()
         .map_err(|e| eyre::eyre!("Failed to parse input: {}", e))?;
 
-    Ok((input, timestamp))
+    Ok((input.to_string(), timestamp))
 }
 
 pub(crate) fn parse_etherscan_timestamp(timestamp_str: &str) -> Result<u64> {

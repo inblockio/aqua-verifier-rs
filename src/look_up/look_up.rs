@@ -73,12 +73,26 @@ fn validate_transaction_status(input: &str) -> bool {
     success_pattern.is_match(input)
 }
 
+// fn extract_input_data(tx_input: &str) -> Result<String, String> {
+//     // Validate the input: must start with "0x" and be long enough to include the method ID
+//     if !tx_input.starts_with("0x") || tx_input.len() <= 10 {
+//         return Err("Invalid input data: must start with '0x' and be longer than the method ID".to_string());
+//     }
+
+//     // Extract the remaining input after the method ID (first 10 characters, including "0x")
+//     // let input_data = format!("0x{}", &tx_input[10..]);
+//     let input_data = &tx_input[8..];
+
+//     // Return the extracted input data with the "0x" prefix
+//     Ok(input_data.to_owned())
+// }
+
 pub(crate) async fn get_tx_data(
     tx_hash: &str,
     verification_provider: String,
     verification_provider_chain: String,
     api_key: String,
-) -> Result<(H512, u64), Report> {
+) -> Result<(String, u64), Report> {
 
     println!("get_tx_data function verification_provider {} verification_provider_chain {} api_key {}  ", verification_provider , verification_provider_chain, api_key);
     // Validate input parameters
@@ -146,11 +160,11 @@ pub(crate) async fn get_tx_data(
             .wrap_err(FAILED_TO_PARSE_BLOCK_NUMBER)?;
 
         // Parse the input
-        let input = tx.input[10..]
-            .parse::<H512>()
-            .wrap_err(FAILED_TO_PARSE_INPUT)?;
+        let input = &tx.input[8..];
+            // .parse::<H512>()
+            // .wrap_err(FAILED_TO_PARSE_INPUT)?;
 
         // Ok((input, blocktime_u64))
-        Ok((input, 0))
+        Ok((input.to_string(), 0))
     }
 }

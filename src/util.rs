@@ -316,9 +316,12 @@ pub fn verify_witness_util(
         api_key,
     ));
 
-    println!("Data received from getting tx information: {:#?}", get_tx_data_res);
+    let (input_data, _) = get_tx_data_res.unwrap();
+    let witness_event_verification_hash  = format!("{}", witness_data.witness_event_verification_hash);
 
-    if get_tx_data_res.is_ok() {
+    println!("Data received from getting tx information: {:#?} \n verification hash: {}", input_data, witness_event_verification_hash);
+
+    if input_data == witness_event_verification_hash {
         (true, "Look up performed.".to_string(), logs)
     }else{
         (false, "Look up failed.".to_string(), logs)
