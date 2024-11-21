@@ -1,14 +1,12 @@
-use ethers::{
-    types::{H256, H512},
-    prelude::*,
-};
-use eyre::{Report, Result};
+use ethers::H512;
+use eyre::Result;
 use reqwest;
 use scraper::{Html, Selector};
 
-pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str) -> Result<(String, u64)> {
-    let url = format!("https://etherscan.io/tx/{}", tx_hash);
+pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str,chain : String ) -> Result<(String, u64)> {
+    let url = format!("https://{}.etherscan.io/tx/{}", chain, tx_hash);
     
+    println!("The url : {}", url);
     // Fetch Etherscan page
     let client = reqwest::Client::new();
     let response = client.get(&url)

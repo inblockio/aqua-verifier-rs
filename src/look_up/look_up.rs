@@ -105,7 +105,7 @@ pub(crate) async fn get_tx_data(
     if verification_provider == "self" {
         println!("Self provider");
 
-        return extract_etherscan_tx_details(tx_hash).await;
+        return extract_etherscan_tx_details(tx_hash, verification_provider_chain).await;
     } else {
         let url_prefix = match verification_provider.as_str() {
             "infura" => match verification_provider_chain.as_str() {
