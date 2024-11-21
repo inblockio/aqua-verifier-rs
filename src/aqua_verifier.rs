@@ -46,7 +46,7 @@ pub struct AquaVerifier {
 }
 
 impl AquaVerifier {
-    pub fn new(options: Option<VerificationOptions>) -> Self {
+    pub fn default(options: Option<VerificationOptions>) -> Self {
         let mut options = options.unwrap_or_default();
         options.strict = false;
         options.allow_null = false;
@@ -55,6 +55,22 @@ impl AquaVerifier {
         options.api_key = "".to_string();
 
         AquaVerifier { options }
+    }
+
+    pub fn new(options: Option<VerificationOptions>) -> Self {
+        // let mut options = options.unwrap_or_default();
+        // options.strict = false;
+        // options.allow_null = false;
+        // options.verification_platform = options// "none".to_string();
+        // options.chain = "sepolia".to_string();
+        // options.api_key = "".to_string();
+
+        let _options = match options {
+            Some(x) => x,
+            None => panic!("PASS IN OPTIONS")
+        };
+
+        AquaVerifier { options: _options }
     }
 
     pub fn fetch_verification_options(&self) -> &VerificationOptions {
