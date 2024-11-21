@@ -134,6 +134,8 @@ pub(crate) async fn get_tx_data(
         let tx: CustomTransaction =
             from_value(serde_json::to_value(&tx)?).wrap_err(FAILED_TO_DESERIALIZE_TRANSACTION)?;
 
+        println!("Found Transaction input: {:#?}", &tx.input);
+
         // Validate transaction input
         if !validate_transaction_status(&tx.input) {
             return Err(eyre::eyre!("Invalid transaction input"));
