@@ -156,7 +156,6 @@ pub(crate) fn verify_revision(
         revision_result.witness_verification.status = ResultStatusEnum::AVAILABLE;
         revision_result.witness_verification.successful = success;
         revision_result.witness_verification.message = message.clone();
-        
 
         if success {
             logs.push("Success : successfully  verified a witness".to_string());
@@ -211,6 +210,8 @@ pub(crate) fn verify_witness(
         message: "default".to_string(),
         logs: logs.clone(),
     };
+
+    println!("Logging here: {}:{}:{}", verification_platform, chain,api_key);
 
     let (success, message, logs_data) = verify_witness_util(
         witness.clone(),
@@ -463,8 +464,6 @@ pub(crate) fn witness_aqua_chain(
 
     let witness_event_verification_hash = Hash::from(hasher_verification.finalize());
 
-
-    
     rev2.witness = Some(RevisionWitness {
         domain_snapshot_genesis_hash: domain_snapshot_genesis_hash,
         merkle_root: rev1.metadata.verification_hash,

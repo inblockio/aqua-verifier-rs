@@ -275,6 +275,7 @@ pub fn verify_witness_util(
     }
 
     if do_verify_merkle_proof {
+        println!("Doing merkle verification: ");
         if verification_hash == witness_data.domain_snapshot_genesis_hash.to_string() {
             return (
                 true,
@@ -297,10 +298,10 @@ pub fn verify_witness_util(
     }
 
     if  verification_platform == "none"{
-
+        println!("No verificaton platform: ");
         (true, "Look up not performed.".to_string(), logs)
     }else{
-
+        println!("Verification platform found: ");
     let tx_hash = witness_data.witness_event_transaction_hash.clone();
     let tx_hash_string = format!("{}", tx_hash);
     let tx_hash_par = tx_hash_string.as_str();
