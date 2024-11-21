@@ -1,4 +1,4 @@
-use ethers::H512;
+use ethers::types::H512;
 use eyre::Result;
 use reqwest;
 use scraper::{Html, Selector};
