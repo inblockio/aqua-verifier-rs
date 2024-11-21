@@ -69,6 +69,9 @@ impl AquaVerifier {
             return Err(KEY_NOT_SET.into());
         }
         // Call the actual verification function (needs to be defined)
+        println!("Verification options in verify revision func 1: {}: {}: {}", self.options.verification_platform.clone(),
+        self.options.chain.clone(),
+        self.options.api_key.clone());
         Ok(verify_revision(
             revision.clone(),
             self.options.verification_platform.clone(),

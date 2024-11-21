@@ -136,6 +136,10 @@ pub(crate) fn verify_revision(
     // Verify Witness (asynchronous)
     if revision.witness.is_some() {
         logs.push("Info : Verifying  a witness".to_string());
+        
+        println!("Verification options in revision verificaton 1: {}: {}: {}", verification_platform,
+        chain,
+        api_key);
 
         let (success, message, logs_data) = verify_witness_util(
             revision.witness.clone().unwrap(),
