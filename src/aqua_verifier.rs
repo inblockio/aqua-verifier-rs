@@ -58,12 +58,7 @@ impl AquaVerifier {
     }
 
     pub fn new(options: Option<VerificationOptions>) -> Self {
-        // let mut options = options.unwrap_or_default();
-        // options.strict = false;
-        // options.allow_null = false;
-        // options.verification_platform = options// "none".to_string();
-        // options.chain = "sepolia".to_string();
-        // options.api_key = "".to_string();
+        
 
         let _options = match options {
             Some(x) => x,
@@ -81,8 +76,10 @@ impl AquaVerifier {
         &self,
         revision: &Revision,
     ) -> Result<RevisionVerificationResult, Box<dyn Error>> {
-        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
+        if self.options.verification_platform == "infura" || self.options.verification_platform == "alchemy" {
+            if self.options.api_key.is_empty() {
             return Err(KEY_NOT_SET.into());
+            }
         }
         // Call the actual verification function (needs to be defined)
         println!("Verification options in verify revision func 1: {}: {}: {}", self.options.verification_platform.clone(),
@@ -117,8 +114,10 @@ impl AquaVerifier {
         if self.options.version != 1.2 {
             return Err(UNSUPPORTED_VERSION.into());
         }
-        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
+        if self.options.verification_platform == "infura" || self.options.verification_platform == "alchemy" {
+            if self.options.api_key.is_empty() {
             return Err(KEY_NOT_SET.into());
+            }
         }
         // Call the actual witness verification function (needs to be defined)
         Ok(verify_witness(
@@ -138,9 +137,10 @@ impl AquaVerifier {
         if self.options.version != 1.2 {
             return Err(UNSUPPORTED_VERSION.into());
         }
-        if self.options.verification_platform != "none" && self.options.api_key.is_empty() {
-
+        if self.options.verification_platform == "infura" || self.options.verification_platform == "alchemy" {
+            if self.options.api_key.is_empty() {
             return Err(KEY_NOT_SET.into());
+            }
         }
         // Call the actual Aqua chain verification function (needs to be defined)
         Ok(verify_aqua_chain(
