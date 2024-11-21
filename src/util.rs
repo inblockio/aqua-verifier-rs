@@ -316,6 +316,8 @@ pub fn verify_witness_util(
         api_key,
     ));
 
+    println!("Data received from getting tx information: {:#?}", get_tx_data_res);
+
     if get_tx_data_res.is_ok() {
         (true, "Look up performed.".to_string(), logs)
     }else{

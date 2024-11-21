@@ -86,7 +86,10 @@ pub(crate) async fn get_tx_data(
         return Err(eyre::eyre!("Invalid verification provider"));
     }
 
+    println!("Starting validation");
+
     if verification_provider == "self" {
+        println!("Self provider");
 
         return extract_etherscan_tx_details(tx_hash).await;
     } else {
@@ -107,36 +110,40 @@ pub(crate) async fn get_tx_data(
             _ => return Err(eyre::eyre!("Unsupported provider")),
         };
 
+        println!("We have a url prefix: {}", url_prefix);
+
         // Build the full URL
         let url = format!("{}{}", url_prefix, api_key);
 
         // Connect to the network
         let provider = Provider::<Http>::try_from(url).wrap_err(FAILED_TO_CREATE_PROVIDER)?;
 
+        println!("Provider set successfully");
+
         // Get the chain ID
-        let chain_id = provider
-            .get_chainid()
-            .await
-            .wrap_err(FAILED_TO_GET_CHAIN_ID)?;
+        // let chain_id = provider
+        //     .get_chainid()
+        //     .await
+        //     .wrap_err(FAILED_TO_GET_CHAIN_ID)?;
 
         // Load the signer private key from the .env file
-        let wallet_key =
-            std::env::var("SIGNER_PRIVATE_KEY").wrap_err(SIGNER_PRIVATE_KEY_MUST_BE_SET)?;
+        // let wallet_key =
+        //     std::env::var("SIGNER_PRIVATE_KEY").wrap_err(SIGNER_PRIVATE_KEY_MUST_BE_SET)?;
 
         // Parse the wallet key
-        let wallet: LocalWallet = wallet_key
-            .parse::<LocalWallet>()
-            .wrap_err(FAILED_TO_PARSE_WALLET_KEY)?
-            .with_chain_id(chain_id.as_u64());
+        // let wallet: LocalWallet = wallet_key
+        //     .parse::<LocalWallet>()
+        //     .wrap_err(FAILED_TO_PARSE_WALLET_KEY)?
+        //     .with_chain_id(chain_id.as_u64());
 
         // Connect the wallet to the provider
-        let client = SignerMiddleware::new(provider, wallet);
+        // let client = SignerMiddleware::new(provider, wallet);
 
         // Parse the transaction hash
         let transaction_hash: H256 = tx_hash.parse().wrap_err(FAILED_TO_PARSE_TRANSACTION_HASH)?;
 
         // Get the transaction
-        let tx = client
+        let tx = provider
             .get_transaction(transaction_hash)
             .await
             .wrap_err(FAILED_TO_GET_TRANSACTION)?
@@ -156,24 +163,25 @@ pub(crate) async fn get_tx_data(
             .wrap_err(FAILED_TO_PARSE_BLOCK_NUMBER)?;
 
         // Get the block
-        let block = client
-            .get_block(blocknumber)
-            .await
-            .wrap_err(FAILED_TO_GET_BLOCK)?;
+        // let block = client
+        //     .get_block(blocknumber)
+        //     .await
+        //     .wrap_err(FAILED_TO_GET_BLOCK)?;
 
         // Deserialize the block time
-        let blocktime: Blocktime =
-            from_value(serde_json::to_value(&block)?).wrap_err(FAILED_TO_DESERIALIZE_BLOCK_TIME)?;
+        // let blocktime: Blocktime =
+        //     from_value(serde_json::to_value(&block)?).wrap_err(FAILED_TO_DESERIALIZE_BLOCK_TIME)?;
 
         // Parse the block timestamp
-        let blocktime_u64 = u64::from_str_radix(blocktime.timestamp.trim_start_matches("0x"), 16)
-            .wrap_err(FAILED_TO_PARSE_TIMESTAMP)?;
+        // let blocktime_u64 = u64::from_str_radix(blocktime.timestamp.trim_start_matches("0x"), 16)
+        //     .wrap_err(FAILED_TO_PARSE_TIMESTAMP)?;
 
         // Parse the input
         let input = tx.input[10..]
             .parse::<H512>()
             .wrap_err(FAILED_TO_PARSE_INPUT)?;
 
-        Ok((input, blocktime_u64))
+        // Ok((input, blocktime_u64))
+        Ok((input, 0))
     }
 }
