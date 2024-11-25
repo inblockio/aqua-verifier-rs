@@ -56,6 +56,7 @@ pub struct VerifyFileResult {
 
 
 
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CheckEtherScanResult {
     pub verification_hash_matches: bool,

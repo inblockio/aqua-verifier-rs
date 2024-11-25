@@ -8,25 +8,46 @@ use aqua_verifier_rs_types::models::revision::Revision;
 use aqua_verifier_rs_types::models::signature::RevisionSignature;
 use aqua_verifier_rs_types::models::signature::Signature;
 use aqua_verifier_rs_types::models::timestamp::Timestamp;
-use aqua_verifier_rs_types::models::tx_hash::{self, TxHash};
+use aqua_verifier_rs_types::models::tx_hash::TxHash;
 use aqua_verifier_rs_types::models::witness::{MerkleNode, RevisionWitness};
 use ethers::utils::hash_message;
 use sha3::{Digest, Sha3_512};
 use tokio::runtime::Runtime;
 use std::collections::BTreeMap;
-use std::fmt::format;
 use std::str;
 use std::str::FromStr;
 
 use crate::model::{ResultStatusEnum, RevisionVerificationResult};
 
+/// Struct to hold the result of file verification.
 #[derive(Debug)]
 pub struct VerifyFileResult {
+    /// The hash of the verified file if successful.
     pub file_hash: Option<String>,
+    /// Error message if verification fails.
     pub error_message: Option<String>,
+    /// Logs of the verification process.
     pub logs: Vec<String>,
 }
 
+
+
+/// Generates a SHA3-512 hash sum from the given content.
+///
+/// # Arguments
+///
+/// * `content` - A string slice containing the content to hash.
+///
+/// # Returns
+///
+/// A hexadecimal representation of the SHA3-512 hash as a String.
+///
+/// # Example
+///
+/// ```
+/// let hash = get_hash_sum("hello world");
+/// println!("Hash: {}", hash);
+/// ```
 pub fn get_hash_sum(content: &str) -> String {
     if content.is_empty() {
         String::new()
@@ -37,7 +58,18 @@ pub fn get_hash_sum(content: &str) -> String {
     }
 }
 
-#[allow(deprecated)]
+
+/// Generates a SHA3-512 hash from a Base64-encoded string.
+///
+/// # Parameters
+/// 
+/// * `b64` - A string slice that holds the Base64-encoded input.
+///
+/// # Returns
+///
+/// Returns an `Option<Vec<u8>>`. If the decoding is successful, it returns 
+/// `Some` containing the hash as a vector of bytes. If decoding fails, 
+/// it returns `None`.
 fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
     // Decode the Base64 string
     let decoded_bytes_result = base64::decode(b64); //.expect("Failed to decode Base64 string");
@@ -61,6 +93,17 @@ fn generate_hash_from_base64(b64: &str) -> Option<Vec<u8>> {
     Some(result.to_vec())
 }
 
+/// Verifies the file content against its expected hash.
+///
+/// # Parameters
+///
+/// * `data` - A `RevisionContent` struct containing the file data and expected hash.
+///
+/// # Returns
+///
+/// Returns a tuple containing:
+/// - A boolean indicating whether the verification was successful.
+/// - A `VerifyFileResult` struct with details about the verification process.
 pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
     let mut logs: Vec<String> = Vec::new();
 
@@ -106,6 +149,17 @@ pub fn verify_file_util(data: RevisionContent) -> (bool, VerifyFileResult) {
     )
 }
 
+/// Verifies that the content's hash matches the expected content hash.
+///
+/// # Parameters
+///
+/// * `data` - A reference to a `RevisionContent` struct containing the content to verify.
+///
+/// # Returns
+///
+/// Returns a tuple containing:
+/// - A boolean indicating whether the verification was successful.
+/// - A string representation of the computed content hash.
 pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
     let mut content = String::new();
     content += format!("{:#?}", data.content.file_hash).as_str();
@@ -119,6 +173,17 @@ pub fn verify_content_util(data: &RevisionContent) -> (bool, String) {
     }
 }
 
+/// Verifies that the metadata matches its expected hash.
+///
+/// # Parameters
+///
+/// * `data` - A reference to a `RevisionMetadata` struct containing metadata to verify.
+///
+/// # Returns
+///
+/// Returns a tuple containing:
+/// - A boolean indicating whether the verification was successful.
+/// - A string representation of the computed metadata hash.
 pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     // let metadata_hash = calculate_metadata_hash(
     //     data.domain_id.clone(),
@@ -141,6 +206,19 @@ pub fn verify_metadata_util(data: &RevisionMetadata) -> (bool, String) {
     }
 }
 
+
+/// Calculates a metadata hash based on domain ID, timestamp, and optional hashes.
+///
+/// # Parameters
+///
+/// * `domain_id` - The domain identifier as a string.
+/// * `timestamp` - The timestamp associated with the metadata.
+/// * `previous_verification_hash` - An optional previous verification hash.
+/// * `merge_hash` - An optional merge hash.
+///
+/// # Returns
+///
+/// Returns a string representing the computed metadata hash.
 pub fn calculate_metadata_hash(
     domain_id: String,
     timestamp: Timestamp,
@@ -157,7 +235,47 @@ pub fn calculate_metadata_hash(
     get_hash_sum(&content)
 }
 
+///! Verification utilities for digital signatures, witness data, and content integrity.
+///! 
+///! This module provides functionality for:
+///! - Verifying digital signatures against provided verification hashes
+///! - Validating witness data and merkle proofs
+///! - Computing and verifying various types /// Verifies witness data and optionally checks merkle proof integrity.
+/// 
+/// # Arguments
+/// * `witness_data` - The witness data containing merkle proof and transaction information
+/// * `verification_hash` - The hash to verify against
+/// * `do_verify_merkle_proof` - Whether to verify the merkle proof
+/// * `verification_platform` - The platform to use for verification
+/// * `chain` - The blockchain network to use
+/// * `api_key` - API key for the verification platform
+/// 
+/// # Returns
+/// A tuple containing:
+/// * `bool` - Whether the witness data is valid
+/// * `String` - A status message
+/// * `Vec<String>` - Logs from the verification processof hashes (content, metadata, witness, etc.)
+///! - Managing revision verification chains
+///!
+///! # Examples
+///! ```rust
+///! let signature_data = RevisionSignature { /* ... */ };
+///! let verification_hash = Hash::new("...");
+///! let (is_valid, status) = verify_signature_util(signature_data, verification_hash);
+///! ```
+
 #[warn(unused_assignments)]
+
+/// Verifies a digital signature against a provided verification hash.
+/// 
+/// # Arguments
+/// * `data` - The signature data containing the signature and wallet address
+/// * `verification_hash` - The hash to verify against
+/// 
+/// # Returns
+/// A tuple containing:
+/// * `bool` - Whether the signature is valid
+/// * `String` - A status message describing the verification result
 pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -> (bool, String) {
     if verification_hash.is_empty() {
         return (false, "Verification hash must not be empty".to_string());
@@ -250,6 +368,22 @@ pub fn verify_signature_util(data: RevisionSignature, verification_hash: Hash) -
     (signature_ok, status)
 }
 
+
+/// Verifies witness data and optionally checks merkle proof integrity.
+/// 
+/// # Arguments
+/// * `witness_data` - The witness data containing merkle proof and transaction information
+/// * `verification_hash` - The hash to verify against
+/// * `do_verify_merkle_proof` - Whether to verify the merkle proof
+/// * `verification_platform` - The platform to use for verification
+/// * `chain` - The blockchain network to use
+/// * `api_key` - API key for the verification platform
+/// 
+/// # Returns
+/// A tuple containing:
+/// * `bool` - Whether the witness data is valid
+/// * `String` - A status message
+/// * `Vec<String>` - Logs from the verification process
 pub fn verify_witness_util(
     witness_data: RevisionWitness,
     verification_hash: String,
@@ -332,6 +466,14 @@ pub fn verify_witness_util(
    
 }
 
+/// Verifies the integrity of a merkle proof.
+/// 
+/// # Arguments
+/// * `merkle_branch` - The merkle proof branch nodes
+/// * `verification_hash` - The hash to verify against
+/// 
+/// # Returns
+/// `bool` - Whether the merkle proof is valid
 pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: String) -> bool {
     if merkle_branch.is_empty() {
         return false;
@@ -369,6 +511,14 @@ pub fn verify_merkle_integrity(merkle_branch: &[MerkleNode], verification_hash: 
     true
 }
 
+
+/// Checks if all verifications in a revision result are successful.
+/// 
+/// # Arguments
+/// * `revision_result` - The revision verification result containing multiple verification statuses
+/// 
+/// # Returns
+/// `bool` - Whether all available verifications were successful
 pub fn all_successful_verifications(revision_result: &RevisionVerificationResult) -> bool {
     let verifications = [
         &revision_result.file_verification,
@@ -387,6 +537,16 @@ pub fn all_successful_verifications(revision_result: &RevisionVerificationResult
     true
 }
 
+/// Computes a witness hash from its components.
+/// 
+/// # Arguments
+/// * `domain_snapshot_genesis_hash` - The genesis hash of the domain snapshot
+/// * `merkle_root` - The root of the merkle tree
+/// * `witness_network` - The network identifier
+/// * `witness_event_transaction_hash` - The transaction hash of the witness event
+/// 
+/// # Returns
+/// `Hash` - The computed witness hash
 pub fn witness_hash(
     domain_snapshot_genesis_hash: &Hash,
     merkle_root: &Hash,
@@ -406,6 +566,14 @@ pub fn witness_hash(
     Hash::from(w.finalize())
 }
 
+/// Computes a signature hash from a signature and public key.
+/// 
+/// # Arguments
+/// * `signature` - The digital signature
+/// * `public_key` - The public key used for signing
+/// 
+/// # Returns
+/// `Hash` - The computed signature hash
 pub fn signature_hash(signature: &Signature, public_key: &PublicKey) -> Hash {
     // 4.a create hasher {s}
     let mut s = crypt::Hasher::default();
@@ -416,6 +584,13 @@ pub fn signature_hash(signature: &Signature, public_key: &PublicKey) -> Hash {
     Hash::from(s.finalize())
 }
 
+/// Computes a content hash from a map of content data.
+/// 
+/// # Arguments
+/// * `content` - Map of content key-value pairs
+/// 
+/// # Returns
+/// `Hash` - The computed content hash
 pub fn content_hash(content: &BTreeMap<String, String>) -> Hash {
     // 3.a create hasher {c}
     let mut c = crypt::Hasher::default();
@@ -427,6 +602,15 @@ pub fn content_hash(content: &BTreeMap<String, String>) -> Hash {
     Hash::from(c.finalize())
 }
 
+/// Computes a metadata hash from revision metadata components.
+/// 
+/// # Arguments
+/// * `domain_id` - The domain identifier
+/// * `time_stamp` - The timestamp of the revision
+/// * `previous_verification_hash` - Optional hash from previous verification
+/// 
+/// # Returns
+/// `Hash` - The computed metadata hash
 pub fn metadata_hash(
     domain_id: &str,
     time_stamp: &Timestamp,
@@ -445,12 +629,23 @@ pub fn metadata_hash(
     Hash::from(m.finalize())
 }
 
+/// Computes a verification hash from multiple component hashes.
+/// 
+/// # Arguments
+/// * `content_hash` - Hash of the content
+/// * `metadata_hash` - Hash of the metadata
+/// * `signature_hash` - Optional signature hash
+/// * `witness_hash` - Optional witness hash
+/// 
+/// # Returns
+/// `Hash` - The computed verification hash
 pub fn verification_hash(
     content_hash: &Hash,
     metadata_hash: &Hash,
     signature_hash: Option<&Hash>,
     witness_hash: Option<&Hash>,
 ) -> Hash {
+
     let mut v = crypt::Hasher::default();
     // 5.b add rev.content.content_hash to hasher {v}
     v.update(content_hash.to_stackstr());
@@ -467,6 +662,16 @@ pub fn verification_hash(
     Hash::from(v.finalize())
 }
 
+
+/// Validates page data revisions for integrity and chain consistency.
+/// 
+/// # Arguments
+/// * `revisions` - Vector of hash-revision pairs to validate
+/// 
+/// # Returns
+/// A tuple containing:
+/// * `bool` - Whether the revisions are valid
+/// * `String` - A status message describing the validation result
 pub fn check_if_page_data_revision_are_okay(revisions: Vec<(Hash, Revision)>) -> (bool, String) {
     let mut is_valid = (true, "".to_string());
     let has_valid_genessis = revsions_has_valid_genesis(revisions.clone());
@@ -533,6 +738,15 @@ pub fn check_if_page_data_revision_are_okay(revisions: Vec<(Hash, Revision)>) ->
 
     return is_valid;
 }
+
+
+/// Checks if revisions contain a valid genesis block.
+/// 
+/// # Arguments
+/// * `revisions` - Vector of hash-revision pairs to check
+/// 
+/// # Returns
+/// `Option<Hash>` - The genesis hash if found and valid, None otherwise
 pub fn revsions_has_valid_genesis(revisions: Vec<(Hash, Revision)>) -> Option<Hash> {
     // let mut is_valid= true;
 
@@ -575,6 +789,13 @@ pub fn revsions_has_valid_genesis(revisions: Vec<(Hash, Revision)>) -> Option<Ha
     return Some(res.unwrap().metadata.verification_hash);
 }
 
+/// Computes a content hash from revision content.
+/// 
+/// # Arguments
+/// * `content_par` - The revision content containing file data
+/// 
+/// # Returns
+/// `Result<Hash, String>` - The computed hash or an error message
 pub fn compute_content_hash(content_par: &RevisionContent) -> Result<Hash, String> {
     let b64 = content_par.file.clone().unwrap().data;
 
@@ -596,6 +817,11 @@ pub fn compute_content_hash(content_par: &RevisionContent) -> Result<Hash, Strin
     Ok(content_hash_current)
 }
 
+
+/// Creates an empty hash using SHA3-512.
+/// 
+/// # Returns
+/// `Hash` - A hash computed from an empty string
 pub fn make_empty_hash() -> Hash {
     let mut hasher = sha3::Sha3_512::default();
     hasher.update("");

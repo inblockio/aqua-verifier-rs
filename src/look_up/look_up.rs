@@ -1,8 +1,6 @@
 use ethers::{
-    middleware::SignerMiddleware,
     prelude::*,
-    providers::{Http, Middleware, Provider},
-    signers::{LocalWallet, Signer},
+    providers::{Middleware, Provider},
 };
 use eyre::{Report, Result, WrapErr};
 use regex::Regex;
@@ -11,12 +9,8 @@ use serde_json::from_value;
 use std::convert::TryFrom;
 use crate::look_up::look_up_utils::extract_etherscan_tx_details;
 use crate::look_up::constants::{
-    UrlProvider, ALCHEMY_API_KEY_MUST_BE_SET, FAILED_TO_CREATE_PROVIDER,
-    FAILED_TO_DESERIALIZE_BLOCK_TIME, FAILED_TO_DESERIALIZE_TRANSACTION, FAILED_TO_GET_BLOCK,
-    FAILED_TO_GET_CHAIN_ID, FAILED_TO_GET_TRANSACTION, FAILED_TO_PARSE_BLOCK_NUMBER,
-    FAILED_TO_PARSE_INPUT, FAILED_TO_PARSE_TIMESTAMP, FAILED_TO_PARSE_TRANSACTION_HASH,
-    FAILED_TO_PARSE_WALLET_KEY, INFURA_KEY_MUST_BE_SET, SELF_HOSTED_API_KEY_MUST_BE_SET,
-    SIGNER_PRIVATE_KEY_MUST_BE_SET,
+    FAILED_TO_CREATE_PROVIDER,
+    FAILED_TO_DESERIALIZE_TRANSACTION, FAILED_TO_GET_TRANSACTION, FAILED_TO_PARSE_TRANSACTION_HASH,
 };
 
 #[derive(Deserialize, Debug)]
@@ -26,67 +20,46 @@ struct CustomTransaction {
     input: String,
 }
 
-#[derive(Deserialize, Debug)]
-struct Blocktime {
-    timestamp: String,
-}
 
-impl UrlProvider {
-    fn to_url(self, chain_id: u32) -> Option<&'static str> {
-        match self {
-            UrlProvider::Infura => chain_id_to_infura_url(chain_id),
-            UrlProvider::SelfHosted => chain_id_to_self_hosted_url(chain_id),
-            UrlProvider::Alchemy => chain_id_to_alchemy_url(chain_id),
-        }
-    }
-}
 
-fn chain_id_to_infura_url(chain_id: u32) -> Option<&'static str> {
-    match chain_id {
-        0x1 => Some("https://mainnet.infura.io/v3/"),
-        0x4268 => Some("https://holesky.infura.io/v3/"),
-        0xaa36a7 => Some("https://sepolia.infura.io/v3/"),
-        _ => None,
-    }
-}
 
-fn chain_id_to_self_hosted_url(chain_id: u32) -> Option<&'static str> {
-    match chain_id {
-        0x1 => Some("http://localhost:8545"), // Example local Ethereum node
-        0x4268 => Some("http://localhost:8546"), // Example Holesky local node
-        0xaa36a7 => Some("http://localhost:8547"), // Example Sepolia local node
-        _ => None,
-    }
-}
-
-fn chain_id_to_alchemy_url(chain_id: u32) -> Option<&'static str> {
-    match chain_id {
-        0x1 => Some("https://eth-mainnet.alchemyapi.io/v2/"),
-        0x4268 => Some("https://eth-holesky.alchemyapi.io/v2/"),
-        0xaa36a7 => Some("https://eth-sepolia.alchemyapi.io/v2/"),
-        _ => None,
-    }
-}
-
-fn validate_transaction_status(input: &str) -> bool {
-    let success_pattern = Regex::new(r"^(0x)?[0-9a-fA-F]{64}$").unwrap();
-    success_pattern.is_match(input)
-}
-
-// fn extract_input_data(tx_input: &str) -> Result<String, String> {
-//     // Validate the input: must start with "0x" and be long enough to include the method ID
-//     if !tx_input.starts_with("0x") || tx_input.len() <= 10 {
-//         return Err("Invalid input data: must start with '0x' and be longer than the method ID".to_string());
-//     }
-
-//     // Extract the remaining input after the method ID (first 10 characters, including "0x")
-//     // let input_data = format!("0x{}", &tx_input[10..]);
-//     let input_data = &tx_input[8..];
-
-//     // Return the extracted input data with the "0x" prefix
-//     Ok(input_data.to_owned())
-// }
-
+/// Retrieves transaction data from an Ethereum network.
+///
+/// # Arguments
+///
+/// * `tx_hash` - The transaction hash to look up
+/// * `verification_provider` - The provider to use ("infura", "alchemy", or "self")
+/// * `verification_provider_chain` - The Ethereum network to use ("mainnet", "sepolia", or "holesky")
+/// * `api_key` - API key for the chosen provider
+///
+/// # Returns
+///
+/// * `Ok((String, u64))` - A tuple containing the transaction input data and block timestamp
+/// * `Err(Report)` - An error if the transaction lookup fails
+///
+/// # Errors
+///
+/// Returns an error in the following cases:
+/// * Invalid verification provider
+/// * Invalid chain selection
+/// * Failed to create provider
+/// * Failed to parse transaction hash
+/// * Failed to get transaction
+/// * Failed to deserialize transaction
+///
+/// # Examples
+///
+/// ```rust
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let (input_data, timestamp) = get_tx_data(
+///     "0x123...",
+///     "infura".to_string(),
+///     "mainnet".to_string(),
+///     "your-api-key".to_string()
+/// ).await?;
+/// # Ok(())
+/// # }
+/// ```
 pub(crate) async fn get_tx_data(
     tx_hash: &str,
     verification_provider: String,

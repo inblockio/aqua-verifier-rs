@@ -28,8 +28,58 @@ use crate::util::{
     verify_signature_util, verify_witness_util, witness_hash,
 };
 
+///! # AquaChain Verifier
+///! 
+///! This crate provides functionality for verifying, signing, and managing AquaChain data structures.
+///! AquaChain is a blockchain-based data verification system that maintains integrity through
+///! cryptographic proofs and signatures.
+///!
+///! ## Key Features
+///!
+///! - Revision verification and management
+///! - Cryptographic signing of chain data
+///! - Witness verification and Merkle proof validation
+///! - Chain generation and modification utilities
+///!
+///! ## Core Components
+///!
+///! The main components include verification utilities, chain management functions, and
+///! cryptographic operations for maintaining data integrity.
+
+/// Maximum allowed file size for chain data (20 MB)
+/// 
 const MAX_FILE_SIZE: u32 = 20 * 1024 * 1024; // 20 MB in bytes
 
+
+/// Verifies a single revision in the AquaChain system.
+///
+/// Performs comprehensive verification including file content, metadata,
+/// signatures, and witness data if present.
+///
+/// # Arguments
+///
+/// * `revision` - The revision to verify
+/// * `verification_platform` - Platform identifier for verification
+/// * `chain` - Chain identifier
+/// * `api_key` - API key for verification service
+///
+/// # Returns
+///
+/// Returns a `RevisionVerificationResult` containing the status of each verification step
+///
+/// # Examples
+///
+/// ```
+/// let result = verify_revision(
+///     revision,
+///     "platform".to_string(),
+///     "chain".to_string(),
+///     "api_key".to_string()
+/// );
+/// if result.successful {
+///     println!("Revision verified successfully");
+/// }
+/// ```
 pub(crate) fn verify_revision(
     revision: Revision,
     verification_platform: String,
@@ -176,6 +226,25 @@ pub(crate) fn verify_revision(
     return revision_result;
 }
 
+/// Verifies a signature against a previous verification hash.
+///
+/// # Arguments
+///
+/// * `signature` - The signature to verify
+/// * `previous_verification_hash` - Hash from previous verification
+///
+/// # Returns
+///
+/// Returns a `ResultStatus` indicating success or failure of verification
+///
+/// # Examples
+///
+/// ```
+/// let status = verify_signature(signature, previous_hash);
+/// if status.successful {
+///     println!("Signature verified");
+/// }
+/// ```
 pub(crate) fn verify_signature(
     signature: RevisionSignature,
     previous_verification_hash: Hash,
@@ -199,6 +268,33 @@ pub(crate) fn verify_signature(
     return default_result_status;
 }
 
+/// Verifies a witness record including optional Merkle proof validation.
+///
+/// # Arguments
+///
+/// * `witness` - The witness data to verify
+/// * `verification_hash` - Hash for verification
+/// * `do_verify_merkle_proof` - Whether to verify Merkle proof
+/// * `verification_platform` - Platform for verification
+/// * `chain` - Chain identifier
+/// * `api_key` - API key for verification service
+///
+/// # Returns
+///
+/// Returns a `ResultStatus` containing verification results and logs
+///
+/// # Examples
+///
+/// ```
+/// let status = verify_witness(
+///     witness,
+///     "hash".to_string(),
+///     true,
+///     "platform".to_string(),
+///     "chain".to_string(),
+///     "api_key".to_string()
+/// );
+/// ```
 pub(crate) fn verify_witness(
     witness: RevisionWitness,
     verification_hash: String,
@@ -215,7 +311,7 @@ pub(crate) fn verify_witness(
         logs: logs.clone(),
     };
 
-    println!("Logging here: {}:{}:{}", verification_platform, chain,api_key);
+    logs.push(format!("Info : Logging here:  verification_platform  {} :  chain {}:  api_key {}", verification_platform, chain,api_key));
 
     let (success, message, logs_data) = verify_witness_util(
         witness.clone(),
@@ -244,6 +340,30 @@ pub(crate) fn verify_witness(
     return default_result_status;
 }
 
+
+/// Verifies an entire AquaChain by validating all revisions.
+///
+/// # Arguments
+///
+/// * `aqua_chain` - The chain to verify
+/// * `verification_platform` - Platform identifier
+/// * `chain` - Chain identifier
+/// * `api_key` - API key for verification
+///
+/// # Returns
+///
+/// Returns a `RevisionAquaChainResult` containing verification results for all revisions
+///
+/// # Examples
+///
+/// ```
+/// let result = verify_aqua_chain(
+///     chain,
+///     "platform".to_string(),
+///     "chain".to_string(),
+///     "api_key".to_string()
+/// );
+/// ```
 pub(crate) fn verify_aqua_chain(
     aqua_chain: HashChain,
     verification_platform: String,
@@ -276,12 +396,35 @@ pub(crate) fn verify_aqua_chain(
     return hash_chain_result;
 }
 
+
+/// Signs a revision in the AquaChain using provided signature data.
+///
+/// # Arguments
+///
+/// * `aqua_chain` - The chain containing the revision to sign
+/// * `revision_content` - Signature content and metadata
+///
+/// # Returns
+///
+/// Returns a Result containing the updated chain and logs, or error messages
+///
+/// # Examples
+///
+/// ```
+/// let (updated_chain, logs) = sign_aqua_chain(chain, signature_content)?;
+/// ```
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Signature parsing fails
+/// - Public key is invalid
+/// - Wallet address is invalid
 pub(crate) fn sign_aqua_chain(
     mut aqua_chain: PageData,
     revision_content: RevisionContentSignature,
 ) -> Result<(PageData, Vec<String>), Vec<String>> {
-    let mut logs: Vec<String> = Vec::new();
-
+    
     let mut log_data: Vec<String> = Vec::new();
     let len = aqua_chain.pages[0].revisions.len();
 
@@ -393,6 +536,30 @@ pub(crate) fn sign_aqua_chain(
     return Ok((aqua_chain, log_data));
 }
 
+/// Adds witness information to a revision in the chain.
+///
+/// Creates Merkle proofs and updates chain state with witness data.
+///
+/// # Arguments
+///
+/// * `aqua_chain` - The chain to update
+/// * `witness_input` - Witness data to add
+///
+/// # Returns
+///
+/// Returns a Result containing the updated chain and logs, or error messages
+///
+/// # Examples
+///
+/// ```
+/// let (updated_chain, logs) = witness_aqua_chain(chain, witness_data)?;
+/// ```
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Transaction hash parsing fails
+/// - Wallet address is invalid
 pub(crate) fn witness_aqua_chain(
     mut aqua_chain: PageData,
     witness_input: RevisionWitnessInput,
@@ -506,6 +673,34 @@ pub(crate) fn witness_aqua_chain(
     return Ok((aqua_chain, log_data));
 }
 
+
+/// Creates a new AquaChain instance with initial revision.
+///
+/// # Arguments
+///
+/// * `body_bytes` - File content as bytes
+/// * `file_name` - Name of the file
+/// * `domain_id` - Domain identifier
+///
+/// # Returns
+///
+/// Returns a Result containing the new chain and logs, or error messages
+///
+/// # Examples
+///
+/// ```
+/// let result = generate_aqua_chain(
+///     file_bytes,
+///     "document.pdf".to_string(),
+///     "domain123".to_string()
+/// )?;
+/// ```
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - File size exceeds MAX_FILE_SIZE (20MB)
+/// - File processing fails
 pub(crate) fn generate_aqua_chain(
     body_bytes: Vec<u8>,
     file_name: String,
@@ -602,6 +797,31 @@ pub(crate) fn generate_aqua_chain(
     Ok(rs)
 }
 
+
+/// Removes specified number of revisions from the chain.
+///
+/// Maintains chain integrity and preserves genesis revision.
+///
+/// # Arguments
+///
+/// * `aqua_chain` - The chain to modify
+/// * `revision_count_for_deletion` - Number of revisions to delete
+///
+/// # Returns
+///
+/// Returns a Result containing the modified chain and logs, or error messages
+///
+/// # Examples
+///
+/// ```
+/// let (updated_chain, logs) = delete_revision_in_aqua_chain(chain, 2)?;
+/// ```
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Deletion count exceeds available revisions
+/// - Attempt to delete genesis revision
 pub(crate) fn delete_revision_in_aqua_chain(
     aqua_chain: PageData,
     revision_count_for_deletion: i32,

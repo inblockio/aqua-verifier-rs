@@ -1,8 +1,49 @@
-use ethers::types::H512;
 use eyre::Result;
 use reqwest;
 use scraper::{Html, Selector};
 
+
+/// Extracts transaction details from Etherscan given a transaction hash and blockchain chain.
+///
+/// This asynchronous function constructs a URL for the specified blockchain's Etherscan
+/// and fetches the transaction details. It parses the HTML response to extract the input data
+/// related to the transaction.
+///
+/// # Parameters
+///
+/// - `tx_hash`: A string slice that holds the transaction hash.
+/// - `chain`: A string that specifies the blockchain (e.g., "eth" for Ethereum).
+///
+/// # Returns
+///
+/// Returns a `Result` containing a tuple with:
+/// - A `String` representing the input data from the transaction.
+/// - A `u64` representing the timestamp of the transaction (currently hardcoded to 0).
+///
+/// # Errors
+///
+/// This function will return an error if:
+/// - The HTTP request to Etherscan fails.
+/// - The response body cannot be read.
+/// - The expected input data element cannot be found in the parsed HTML.
+///
+/// # Examples
+///
+/// ```
+/// use eyre::Result;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let (input_data, timestamp) = extract_etherscan_tx_details("0x1234567890abcdef", "eth").await?;
+///     println!("Input Data: {}, Timestamp: {}", input_data, timestamp);
+///     Ok(())
+/// }
+/// ```
+///
+/// # Panics
+///
+/// This function may panic if the CSS selector for input data is malformed or if there are issues
+/// with parsing the HTML document.
 pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str,chain : String ) -> Result<(String, u64)> {
     let url = format!("https://{}.etherscan.io/tx/{}", chain, tx_hash);
     
@@ -24,8 +65,6 @@ pub(crate) async fn extract_etherscan_tx_details(tx_hash: &str,chain : String ) 
     // Parse HTML
     let document = Html::parse_document(&body);
     
-
-
   
     let timestamp = 0;
 
