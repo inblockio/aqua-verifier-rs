@@ -1,7 +1,18 @@
 [package]
-name = "verifier"
-version = "0.1.0"
+name = "aqua-verifier"
+authors=["dalmasonto<https://github.com/dalmasonto>","Arthur-Kamau<https://github.com/Arthur-Kamau>" ]
+version = "1.2.0"
 edition = "2021"
+license-file = "LICENCE"
+description = "Aqua protocol library to sign, witness , and verify aqua chains."
+readme = "README.md" 
+keywords = ["aqua", "aqua-protocol"] # Keywords for crates.io search
+categories = ["development-tools", "command-line-utilities"] # Categories on crates.io
+repository = "https://github.com/inblockio/aqua-verifier"      # Source repository
+homepage = "https://github.com/inblockio/aqua-verifier"                   # Project homepage
+documentation = "https://docs.rs/aqua-verifier"                   # Documentation URL
+exclude = ["target", "*.lock", ".vscode", ".idea"]   
+
 
 [dependencies]
 flagset = { version = "0.4.5", features = ["serde"] }

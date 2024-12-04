@@ -132,6 +132,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 
 [[package]]
+name = "aqua-verifier"
+version = "1.2.0"
+dependencies = [
+ "aqua-verifier-rs-types",
+ "async-trait",
+ "base64 0.22.1",
+ "chrono",
+ "ethaddr",
+ "ethereum-types",
+ "ethers",
+ "eyre",
+ "flagset",
+ "futures",
+ "hex",
+ "jsonschema",
+ "libsecp256k1",
+ "regex",
+ "reqwest 0.11.27",
+ "scraper",
+ "serde",
+ "serde_json",
+ "sha3",
+ "tokio",
+]
+
+[[package]]
 name = "aqua-verifier-rs-types"
 version = "0.1.0"
 source = "git+https://github.com/inblockio/aqua-verifier-rs-types?rev=495735706073f86864ef9a461a80bddc30866f08#495735706073f86864ef9a461a80bddc30866f08"
@@ -4835,32 +4861,6 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "verifier"
-version = "0.1.0"
-dependencies = [
- "aqua-verifier-rs-types",
- "async-trait",
- "base64 0.22.1",
- "chrono",
- "ethaddr",
- "ethereum-types",
- "ethers",
- "eyre",
- "flagset",
- "futures",
- "hex",
- "jsonschema",
- "libsecp256k1",
- "regex",
- "reqwest 0.11.27",
- "scraper",
- "serde",
- "serde_json",
- "sha3",
- "tokio",
-]
 
 [[package]]
 name = "version_check"
